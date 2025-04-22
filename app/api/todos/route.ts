@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDB } from "@/lib/mongoose";
 import Todo from "@/models/todo";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
 export async function GET(req: Request) {
   try {

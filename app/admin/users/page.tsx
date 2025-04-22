@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 export default function UsersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -142,8 +142,12 @@ export default function UsersPage() {
                     <div className="text-sm text-muted-foreground">
                       Joined {format(new Date(user.createdAt), "MMM d, yyyy")}
                     </div>
-                    <Button variant="ghost" size="sm">
-                      View Details
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => router.push(`/admin/users/${user._id}`)}
+                    >
+                      View Profile
                     </Button>
                   </div>
                 </motion.div>

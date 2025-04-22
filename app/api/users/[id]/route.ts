@@ -4,7 +4,10 @@ import User from "@/models/user";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 
-export async function GET(req: Request) {
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -17,14 +20,20 @@ export async function GET(req: Request) {
 
     await connectToDB();
 
-    // Get all users except sensitive info
-    const users = await User.find({}).select("name email role createdAt");
+    const user = await User.findById(params.id).select("name email role createdAt");
 
-    return NextResponse.json(users);
+    if (!user) {
+      return NextResponse.json(
+        { message: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(user);
   } catch (error) {
-    console.error("Error fetching users:", error);
+    console.error("Error fetching user:", error);
     return NextResponse.json(
-      { message: "Error fetching users" },
+      { message: "Error fetching user" },
       { status: 500 }
     );
   }
