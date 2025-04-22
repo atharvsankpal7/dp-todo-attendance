@@ -48,7 +48,7 @@ export async function GET(req: Request) {
     const todos = await Todo.find(query)
       .populate("assignedTo", "name email")
       .populate("createdBy", "name email")
-      .sort({ createdAt: -1 });
+      .sort({ dueDate: 1 }); // Sort by dueDate in ascending order
 
     return NextResponse.json(todos);
   } catch (error) {
@@ -90,11 +90,14 @@ export async function POST(req: Request) {
       assignTo = assignedTo;
     }
 
+    // Parse the dueDate string into a Date object
+    const dueDateObj = new Date(dueDate);
+
     const newTodo = await Todo.create({
       title,
       description,
       assignedTo: assignTo,
-      dueDate,
+      dueDate: dueDateObj,
       status: "incomplete",
       createdBy: session.user.id,
     });

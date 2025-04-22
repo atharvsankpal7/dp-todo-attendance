@@ -46,7 +46,7 @@ export default function TodoList({
   const filteredTodos = todos.filter((todo) => {
     let matchesSearch = true;
     let matchesUser = true;
-
+    let matchesDate = true;
     if (searchQuery) {
       matchesSearch = todo.title
         .toLowerCase()
@@ -62,7 +62,7 @@ export default function TodoList({
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
-
+    console.log(date);
     let url = "/todos";
     const params = new URLSearchParams();
 

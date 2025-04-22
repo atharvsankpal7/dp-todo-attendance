@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { CheckCircle, CircleDashed, Edit, Trash2, Calendar, User } from "lucide-react";
+import { CheckCircle, CircleDashed, Edit, Trash2, Calendar, Clock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -106,6 +106,10 @@ export default function TodoItem({ todo, isAdmin = false }: TodoItemProps) {
                 <Badge variant="outline" className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
                   {formatDate(todo.dueDate)}
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {format(new Date(todo.dueDate), "h:mm a")}
                 </Badge>
                 <Badge variant="outline" className="flex items-center gap-1">
                   <User className="h-3 w-3" />
