@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
@@ -34,6 +34,8 @@ const formSchema = z.object({
 export default function SigninPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,7 +52,7 @@ export default function SigninPage() {
       const response = await signIn("credentials", {
         email: values.email,
         password: values.password,
-        redirect: false,
+        // redirect: false,
       });
 
       if (response?.error) {
@@ -59,7 +61,7 @@ export default function SigninPage() {
       }
 
       toast.success("Signed in successfully");
-      router.push("/dashboard");
+      router.push(callbackUrl);
       router.refresh();
     } catch (error) {
       toast.error("Something went wrong");

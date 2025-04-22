@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
@@ -37,6 +37,8 @@ const formSchema = z.object({
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,7 +53,7 @@ export default function SignupPage() {
     setIsLoading(true);
     
     try {
-      const response = await fetch("/api/register", {
+      const registerResponse = await fetch("/api/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -59,22 +61,26 @@ export default function SignupPage() {
         body: JSON.stringify(values),
       });
 
-      const data = await response.json();
+      const registerData = await registerResponse.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
+      if (!registerResponse.ok) {
+        throw new Error(registerData.message || "Registration failed");
       }
 
       toast.success("Account created successfully");
       
-      // Auto sign in after successful registration
-      await signIn("credentials", {
+      // Sign in after successful registration
+      const signInResponse = await signIn("credentials", {
         email: values.email,
         password: values.password,
         redirect: false,
       });
 
-      router.push("/dashboard");
+      if (signInResponse?.error) {
+        throw new Error("Failed to sign in after registration");
+      }
+
+      router.push(callbackUrl);
       router.refresh();
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
