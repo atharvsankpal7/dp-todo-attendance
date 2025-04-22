@@ -112,7 +112,7 @@ export default function TodoItem({ todo, isAdmin = false }: TodoItemProps) {
                   {todo.assignedTo.name}
                 </Badge>
                 <Badge 
-                  variant={todo.status === "complete" ? "success" : "default"}
+                  variant={todo.status === "complete" ? "outline" : "default"}
                   className={`${todo.status === "complete" ? "bg-green-500/10 text-green-700 hover:bg-green-500/20" : "bg-amber-500/10 text-amber-700 hover:bg-amber-500/20"}`}
                 >
                   {todo.status === "complete" ? "Completed" : "Pending"}

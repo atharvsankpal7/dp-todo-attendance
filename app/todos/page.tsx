@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import TodoList from "@/components/todo/todo-list";
 
-export default function TodosPage() {
+function TodosContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -98,5 +98,22 @@ export default function TodosPage() {
         users={users} 
       />
     </div>
+  );
+}
+
+export default function TodosPage() {
+  return (
+    <Suspense fallback={
+      <div className="container py-10">
+        <div className="flex justify-center items-center min-h-[50vh]">
+          <div className="flex flex-col items-center">
+            <Loader2 className="h-8 w-8 animate-spin mb-4" />
+            <p>Loading todos...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <TodosContent />
+    </Suspense>
   );
 }
