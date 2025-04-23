@@ -76,16 +76,19 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="container py-10">
+
+    <div className="container py-6 md:py-10">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <h1 className="text-3xl font-bold mb-6">User Management</h1>
+
+        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">User Management</h1>
       </motion.div>
 
-      <div className="mb-6">
+
+      <div className="mb-4 md:mb-6">
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -120,9 +123,11 @@ export default function UsersPage() {
                 <motion.div
                   key={user._id}
                   variants={item}
-                  className="flex items-center justify-between p-4 rounded-lg border"
+
+                  className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-lg border gap-4 md:gap-0"
                 >
-                  <div className="flex items-center gap-4">
+
+                  <div className="flex items-center gap-4 w-full md:w-auto">
                     <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
                       {user.role === "admin" ? (
                         <Shield className="h-5 w-5" />
@@ -135,7 +140,8 @@ export default function UsersPage() {
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
+
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 w-full md:w-auto">
                     <Badge variant={user.role === "admin" ? "default" : "outline"}>
                       {user.role === "admin" ? "Admin" : "User"}
                     </Badge>
@@ -146,6 +152,7 @@ export default function UsersPage() {
                       variant="ghost" 
                       size="sm"
                       onClick={() => router.push(`/admin/users/${user._id}`)}
+                      className="w-full md:w-auto"
                     >
                       View Profile
                     </Button>

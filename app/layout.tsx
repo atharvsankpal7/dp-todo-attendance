@@ -9,8 +9,8 @@ import Navbar from "@/components/layout/navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Todo App",
-  description: "A modern todo application with user and admin roles",
+  title: "DP Task Manager",
+  description: "Display Promotion's Task Manager",
 };
 
 export default function RootLayout({
@@ -28,10 +28,14 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <NextAuthProvider>
-            <Navbar />
-            <main className="pt-16 min-h-screen">
-              {children}
-            </main>
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-1 pt-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  {children}
+                </div>
+              </main>
+            </div>
             <Toaster position="top-center" />
           </NextAuthProvider>
         </ThemeProvider>
