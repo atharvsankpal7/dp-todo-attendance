@@ -13,7 +13,7 @@ export default function EditTodoPage() {
   const router = useRouter();
   const params = useParams();
   const todoId = params.id;
-  
+
   const [todo, setTodo] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,11 +24,10 @@ export default function EditTodoPage() {
     const fetchTodo = async () => {
       try {
         const response = await fetch(`/api/todos/${todoId}`);
-        
         if (!response.ok) {
           throw new Error("Failed to fetch todo");
         }
-        
+
         const data = await response.json();
         setTodo(data);
       } catch (error) {
@@ -77,8 +76,8 @@ export default function EditTodoPage() {
         <div className="flex justify-center items-center min-h-[50vh]">
           <div className="flex flex-col items-center">
             <p className="text-lg">Todo not found</p>
-            <Button 
-              variant="link" 
+            <Button
+              variant="link"
               className="mt-2"
               onClick={() => router.push("/todos")}
             >
@@ -98,24 +97,18 @@ export default function EditTodoPage() {
         transition={{ duration: 0.3 }}
         className="mb-6"
       >
-        <Button
-          variant="ghost"
-          className="mb-4"
-          onClick={() => router.back()}
-        >
+        <Button variant="ghost" className="mb-4" onClick={() => router.back()}>
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
         <h1 className="text-3xl font-bold">Edit Todo</h1>
-        <p className="text-muted-foreground">
-          Update todo details
-        </p>
+        <p className="text-muted-foreground">Update todo details</p>
       </motion.div>
 
-      <TodoForm 
-        isAdmin={isAdmin} 
-        users={users} 
-        initialData={todo} 
+      <TodoForm
+        isAdmin={isAdmin}
+        users={users}
+        initialData={todo}
         mode="edit"
       />
     </div>

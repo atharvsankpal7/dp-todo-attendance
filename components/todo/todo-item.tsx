@@ -127,7 +127,7 @@ export default function TodoItem({ todo, isAdmin = false }: TodoItemProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => router.push(`/todos/${todo._id}/edit`)}
+                onClick={() => router.push(`/todos/${todo._id}`)}
               >
                 <Edit className="h-4 w-4" />
                 <span className="sr-only">Edit</span>

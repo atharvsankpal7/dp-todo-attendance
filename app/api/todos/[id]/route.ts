@@ -59,6 +59,7 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions);
+    console.log("Deleting todo with ID:", params.id);
     
     if (!session) {
       return NextResponse.json(
