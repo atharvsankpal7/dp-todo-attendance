@@ -33,36 +33,59 @@ interface TodoListProps {
   isAdmin?: boolean;
   users: any[];
 }
+
 export default function TodoList({
-  todos = [],
+  todos: initialTodos = [],
   isAdmin = false,
   users = [],
 }: TodoListProps) {
   const router = useRouter();
+  const [todos, setTodos] = useState(initialTodos);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const fetchTodos = async () => {
+    try {
+      let url = "/api/todos";
+      const params = new URLSearchParams();
+
+      if (selectedDate) {
+        params.append("date", selectedDate.toISOString().split("T")[0]);
+      }
+
+      if (selectedUser && isAdmin) {
+        params.append("assignedTo", selectedUser);
+      }
+
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+      setTodos(data);
+    } catch (error) {
+      console.error("Error fetching todos:", error);
+    }
+  };
+
+  useEffect(() => {
+    setTodos(initialTodos);
+  }, [initialTodos]);
+
   const filteredTodos = todos.filter((todo) => {
     let matchesSearch = true;
-    let matchesUser = true;
-    let matchesDate = true;
     if (searchQuery) {
       matchesSearch = todo.title
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
     }
-
-    if (selectedUser && isAdmin) {
-      matchesUser = todo.assignedTo._id === selectedUser;
-    }
-
-    return matchesSearch && matchesUser;
+    return matchesSearch;
   });
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
-    console.log(date);
     let url = "/todos";
     const params = new URLSearchParams();
 
@@ -101,7 +124,6 @@ export default function TodoList({
   
     router.push(url);
   };
-  
 
   const clearFilters = () => {
     setSelectedDate(undefined);
@@ -219,7 +241,13 @@ export default function TodoList({
             </motion.div>
           ) : (
             filteredTodos.map((todo) => (
-              <TodoItem key={todo._id} todo={todo} isAdmin={isAdmin} />
+              <TodoItem 
+                key={todo._id} 
+                todo={todo} 
+                isAdmin={isAdmin} 
+                onUpdate={fetchTodos}
+                onDelete={fetchTodos}
+              />
             ))
           )}
         </AnimatePresence>

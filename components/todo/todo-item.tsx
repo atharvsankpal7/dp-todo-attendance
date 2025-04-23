@@ -17,9 +17,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface TodoItemProps {
   todo: any;
   isAdmin?: boolean;
+  onUpdate?: () => void;
+  onDelete?: () => void;
 }
 
-export default function TodoItem({ todo, isAdmin = false }: TodoItemProps) {
+export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: TodoItemProps) {
   const router = useRouter();
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -53,7 +55,11 @@ export default function TodoItem({ todo, isAdmin = false }: TodoItemProps) {
 
       toast.success(`Todo marked as ${selectedStatus}`);
       setIsStatusDialogOpen(false);
-      router.refresh();
+      
+      // Call the onUpdate callback to refresh the todo list
+      if (onUpdate) {
+        onUpdate();
+      }
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
     } finally {
@@ -75,7 +81,11 @@ export default function TodoItem({ todo, isAdmin = false }: TodoItemProps) {
 
       toast.success("Todo deleted successfully");
       setIsDeleteDialogOpen(false);
-      router.refresh();
+      
+      // Call the onDelete callback to refresh the todo list
+      if (onDelete) {
+        onDelete();
+      }
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
     } finally {
