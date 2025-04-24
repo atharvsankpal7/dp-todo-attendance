@@ -26,14 +26,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // Hash password
-    const hashedPassword = await hash(password);
 
     // Create new user
     const newUser = await User.create({
       name,
       email,
-      password: hashedPassword,
+      password,
       role: "user", // Default role
     });
 

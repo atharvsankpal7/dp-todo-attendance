@@ -10,7 +10,14 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { CheckSquare, Loader2 } from "lucide-react";
 import {
   Form,
@@ -47,16 +54,21 @@ function SignInContent() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-    
+
     try {
       const response = await signIn("credentials", {
         email: values.email,
         password: values.password,
-        // redirect: false,
+        redirect: false,
       });
-
-      if (response?.error) {
-        toast.error("Invalid email or password");
+      if (response?.status === 401) {
+        toast.error("Invalid email or password", {
+          style: {
+            background: "#FEE2E2",
+            border: "1px solid #EF4444",
+            color: "#B91C1C",
+          },
+        });
         return;
       }
 
@@ -83,7 +95,9 @@ function SignInContent() {
             <CheckSquare className="w-10 h-10 text-primary" />
           </div>
           <h1 className="text-3xl font-bold">Welcome back</h1>
-          <p className="text-muted-foreground">Sign in to your account to continue</p>
+          <p className="text-muted-foreground">
+            Sign in to your account to continue
+          </p>
         </div>
 
         <Card>
@@ -95,7 +109,10 @@ function SignInContent() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="email"
@@ -116,7 +133,11 @@ function SignInContent() {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="******" {...field} />
+                        <Input
+                          type="password"
+                          placeholder="******"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -138,7 +159,10 @@ function SignInContent() {
           <CardFooter className="flex flex-col items-center gap-2">
             <div className="text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
-              <Link href="/auth/signup" className="text-primary hover:underline">
+              <Link
+                href="/auth/signup"
+                className="text-primary hover:underline"
+              >
                 Sign up
               </Link>
             </div>
@@ -151,11 +175,13 @@ function SignInContent() {
 
 export default function SigninPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      }
+    >
       <SignInContent />
     </Suspense>
   );
