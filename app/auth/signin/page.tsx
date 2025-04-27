@@ -18,7 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckSquare, Loader2 } from "lucide-react";
+import { CheckSquare, Loader2, Eye, EyeOff } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -40,6 +40,7 @@ const formSchema = z.object({
 
 function SignInContent() {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
@@ -51,6 +52,10 @@ function SignInContent() {
       password: "",
     },
   });
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
@@ -133,11 +138,30 @@ function SignInContent() {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="******"
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="******"
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3"
+                            onClick={togglePasswordVisibility}
+                            tabIndex={-1}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            <span className="sr-only">
+                              {showPassword ? "Hide password" : "Show password"}
+                            </span>
+                          </Button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

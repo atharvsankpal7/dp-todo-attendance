@@ -1,0 +1,13 @@
+task should have the 3 status : 1. complete 2. pending 3. in progress 4. cancelled
+task can have a reference images added to it as well
+----
+add notes features, notes should be a seperate entity which can be added by the user and later when creatting the task, the notes can be added to the task as description, when the note is used as description then we should indicate that the note is used as description earlier
+
+the note can have a reference image added to it as well
+
+when we add the note as description then we should also give option to add images from the note to the task as well, but additionally we could also add other images to the task as well 
+----
+tasks should have past version features
+----
+also when we update the backend we should have instantanous up updates on the frontend as well
+----
