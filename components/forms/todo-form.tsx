@@ -1,12 +1,10 @@
-"use client";
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { CalendarIcon, Clock, Loader2 } from "lucide-react";
+import { CalendarIcon, Clock, Loader2, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +25,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 const todoSchema = z.object({
@@ -37,6 +43,8 @@ const todoSchema = z.object({
     required_error: "Due date is required",
   }),
   dueTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Please enter a valid time in HH:mm format"),
+  noteId: z.string().optional(),
+  images: z.array(z.string()).optional(),
 });
 
 type TodoFormValues = z.infer<typeof todoSchema>;
@@ -56,6 +64,9 @@ interface TodoFormProps {
 
 export default function TodoForm({ isAdmin = false, users = [], initialData, mode = "create" }: TodoFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notes, setNotes] = useState([]);
+  const [selectedNote, setSelectedNote] = useState(null);
+  const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
   const router = useRouter();
 
   const defaultValues = initialData
@@ -64,18 +75,55 @@ export default function TodoForm({ isAdmin = false, users = [], initialData, mod
         dueDate: new Date(initialData.dueDate),
         dueTime: format(new Date(initialData.dueDate), "HH:mm"),
         assignedTo: initialData.assignedTo._id || initialData.assignedTo,
+        noteId: initialData.noteId?._id,
       }
     : {
         title: "",
         description: "",
         dueDate: new Date(),
         dueTime: format(new Date(), "HH:mm"),
+        images: [],
       };
 
   const form = useForm<TodoFormValues>({
     resolver: zodResolver(todoSchema),
     defaultValues,
   });
+
+  const fetchNotes = async () => {
+    try {
+      const response = await fetch("/api/notes");
+      const data = await response.json();
+      setNotes(data);
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+      toast.error("Failed to fetch notes");
+    }
+  };
+
+  const handleNoteSelect = async (note: any) => {
+    setSelectedNote(note);
+    form.setValue("description", note.description);
+    form.setValue("noteId", note._id);
+    form.setValue("images", [...(form.getValues("images") || []), ...(note.images || [])]);
+    
+    // Update note's usedAsDescription status
+    try {
+      await fetch(`/api/notes/${note._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          usedAsDescription: true,
+        }),
+      });
+    } catch (error) {
+      console.error("Error updating note status:", error);
+    }
+    
+    setIsNotesDialogOpen(false);
+  };
 
   const onSubmit = async (data: TodoFormValues) => {
     setIsSubmitting(true);
@@ -142,13 +190,59 @@ export default function TodoForm({ isAdmin = false, users = [], initialData, mod
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Enter a detailed description (optional)"
-                    {...field}
-                    value={field.value || ""}
-                  />
-                </FormControl>
+                <div className="flex gap-2">
+                  <FormControl className="flex-1">
+                    <Textarea
+                      placeholder="Enter a detailed description (optional)"
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <Dialog open={isNotesDialogOpen} onOpenChange={setIsNotesDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="shrink-0"
+                        onClick={() => fetchNotes()}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Note
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Select Note</DialogTitle>
+                        <DialogDescription>
+                          Choose a note to use as the description for this todo
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        {notes.map((note: any) => (
+                          <div
+                            key={note._id}
+                            className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                              note.usedAsDescription
+                                ? "opacity-50 cursor-not-allowed"
+                                : "hover:border-primary"
+                            }`}
+                            onClick={() => !note.usedAsDescription && handleNoteSelect(note)}
+                          >
+                            <h3 className="font-medium">{note.title}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                              {note.description}
+                            </p>
+                            {note.usedAsDescription && (
+                              <p className="text-sm text-yellow-600 mt-2">
+                                This note is already used in another todo
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
