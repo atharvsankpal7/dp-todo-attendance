@@ -46,6 +46,11 @@ export default function Navbar() {
       href: "/admin/users",
       active: pathname === "/admin/users",
     },
+    {
+      label: "Notes",
+      href: "/admin/notes",
+      active: pathname === "/admin/notes",
+    },
   ];
 
   useEffect(() => {
