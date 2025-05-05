@@ -4,7 +4,8 @@ import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import TodoList from "@/components/todo/todo-list";
-import { Loader2 } from "lucide-react";
+import TodosLoading from "@/components/todo/todo-loading";
+
 export default function TodosContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -67,18 +68,7 @@ export default function TodosContent() {
     }
   }, [status, isAdmin, router, dateParam, assignedToParam]);
 
-  //   if (status === "loading" || loading) {
-  //     return (
-  //       <div className="container py-10">
-  //         <div className="flex justify-center items-center min-h-[50vh]">
-  //           <div className="flex flex-col items-center">
-  //             <Loader2 className="h-8 w-8 animate-spin mb-4" />
-  //             <p>Loading todos...</p>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     );
-  //   }
+
 
   return (
     <div className="container py-10">

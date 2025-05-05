@@ -1,6 +1,5 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -27,6 +26,7 @@ import {
 } from "@/components/ui/popover";
 import TodoItem from "./todo-item";
 import { formatDate } from "@/lib/utils";
+import TodosLoading from "./todo-loading";
 
 interface TodoListProps {
   todos: any[];
@@ -44,9 +44,11 @@ export default function TodoList({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const fetchTodos = async () => {
+  const fetchTodos = useCallback(async () => {
     try {
+      setLoading(true); // ✅ start loading
       let url = "/api/todos";
       const params = new URLSearchParams();
 
@@ -67,12 +69,15 @@ export default function TodoList({
       setTodos(data);
     } catch (error) {
       console.error("Error fetching todos:", error);
+    } finally {
+      setLoading(false); // ✅ stop loading
     }
-  };
+  }, [selectedDate, selectedUser, isAdmin]);
 
+  // ✅ fetch todos when filter changes
   useEffect(() => {
-    setTodos(initialTodos);
-  }, [initialTodos]);
+    fetchTodos();
+  }, [fetchTodos]);
 
   const filteredTodos = todos.filter((todo) => {
     let matchesSearch = true;
@@ -86,43 +91,10 @@ export default function TodoList({
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
-    let url = "/todos";
-    const params = new URLSearchParams();
-
-    if (date) {
-      params.append("date", date.toISOString().split("T")[0]);
-    }
-
-    if (selectedUser && isAdmin) {
-      params.append("assignedTo", selectedUser);
-    }
-
-    if (params.toString()) {
-      url += `?${params.toString()}`;
-    }
-
-    router.push(url);
   };
 
   const handleUserSelect = (userId: string) => {
     setSelectedUser(userId === "__all__" ? "" : userId);
-  
-    let url = "/todos";
-    const params = new URLSearchParams();
-  
-    if (selectedDate) {
-      params.append("date", selectedDate.toISOString().split("T")[0]);
-    }
-  
-    if (userId !== "__all__" && isAdmin) {
-      params.append("assignedTo", userId);
-    }
-  
-    if (params.toString()) {
-      url += `?${params.toString()}`;
-    }
-  
-    router.push(url);
   };
 
   const clearFilters = () => {
@@ -134,13 +106,12 @@ export default function TodoList({
 
   const container = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
+
+  // if (loading) {
+  //   return <TodosLoading />;
+  // }
 
   return (
     <div className="space-y-6">
@@ -225,7 +196,9 @@ export default function TodoList({
         className="space-y-4"
       >
         <AnimatePresence>
-          {filteredTodos.length === 0 ? (
+          {loading ? (
+            <TodosLoading />
+          ) : filteredTodos.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -241,10 +214,10 @@ export default function TodoList({
             </motion.div>
           ) : (
             filteredTodos.map((todo) => (
-              <TodoItem 
-                key={todo._id} 
-                todo={todo} 
-                isAdmin={isAdmin} 
+              <TodoItem
+                key={todo._id}
+                todo={todo}
+                isAdmin={isAdmin}
                 onUpdate={fetchTodos}
                 onDelete={fetchTodos}
               />

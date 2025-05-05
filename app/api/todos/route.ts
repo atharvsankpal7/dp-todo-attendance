@@ -7,48 +7,42 @@ import { authOptions } from "@/lib/auth-options";
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
     const assignedTo = searchParams.get("assignedTo");
     const date = searchParams.get("date");
-    
+
     await connectToDB();
 
     let query: any = {};
-    
-    // If admin and assignedTo parameter provided, filter by assignedTo
+
     if (session.user.role === "admin" && assignedTo) {
       query.assignedTo = assignedTo;
     } else {
-      // Regular users can only see their own todos
       query.assignedTo = session.user.id;
     }
 
-    // Filter by date if provided
     if (date) {
       const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
-      
+
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
-      
+
       query.dueDate = {
         $gte: startOfDay,
-        $lte: endOfDay
+        $lte: endOfDay,
       };
     }
 
     const todos = await Todo.find(query)
       .populate("assignedTo", "name email")
       .populate("createdBy", "name email")
-      .sort({ dueDate: 1 }); // Sort by dueDate in ascending order
+      .sort({ status: -1, dueDate: -1 }); // send incomplete tasks first
 
     return NextResponse.json(todos);
   } catch (error) {
@@ -63,16 +57,13 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const { title, description, assignedTo, dueDate } = await req.json();
-    
+
     if (!title || !dueDate) {
       return NextResponse.json(
         { message: "Title and due date are required" },
@@ -84,7 +75,7 @@ export async function POST(req: Request) {
 
     // Determine the assignedTo value
     let assignTo = session.user.id; // Default to current user
-    
+
     // If admin is assigning to another user
     if (session.user.role === "admin" && assignedTo) {
       assignTo = assignedTo;
@@ -105,7 +96,7 @@ export async function POST(req: Request) {
     // Populate the user fields
     const populatedTodo = await newTodo.populate([
       { path: "assignedTo", select: "name email" },
-      { path: "createdBy", select: "name email" }
+      { path: "createdBy", select: "name email" },
     ]);
 
     return NextResponse.json(populatedTodo, { status: 201 });

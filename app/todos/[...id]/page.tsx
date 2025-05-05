@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TodoForm from "@/components/forms/todo-form";
+import TodoItemLoading from "@/components/todo/todo-item-loading";
 
 export default function EditTodoPage() {
   const { data: session, status } = useSession();
@@ -59,14 +60,7 @@ export default function EditTodoPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="container py-10">
-        <div className="flex justify-center items-center min-h-[50vh]">
-          <div className="flex flex-col items-center">
-            <Loader2 className="h-8 w-8 animate-spin mb-4" />
-            <p>Loading todo...</p>
-          </div>
-        </div>
-      </div>
+      <TodoItemLoading/>
     );
   }
 
