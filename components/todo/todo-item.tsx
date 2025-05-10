@@ -5,14 +5,41 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { CheckCircle, CircleDashed, Edit, Trash2, Calendar, Clock, User } from "lucide-react";
+import {
+  CheckCircle,
+  CircleDashed,
+  Edit,
+  Trash2,
+  Calendar,
+  Clock,
+  User,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface TodoItemProps {
   todo: any;
@@ -21,17 +48,24 @@ interface TodoItemProps {
   onDelete?: () => void;
 }
 
-export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: TodoItemProps) {
+export default function TodoItem({
+  todo,
+  isAdmin = false,
+  onUpdate,
+  onDelete,
+}: TodoItemProps) {
   const router = useRouter();
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [incompleteReason, setIncompleteReason] = useState(todo.incompleteReason || "");
+  const [incompleteReason, setIncompleteReason] = useState(
+    todo.incompleteReason || ""
+  );
   const [selectedStatus, setSelectedStatus] = useState(todo.status);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleStatusChange = async () => {
     setIsSubmitting(true);
-    
+
     try {
       if (selectedStatus === "incomplete" && !incompleteReason.trim()) {
         toast.error("Please provide a reason for marking as incomplete");
@@ -45,7 +79,8 @@ export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: 
         },
         body: JSON.stringify({
           status: selectedStatus,
-          incompleteReason: selectedStatus === "incomplete" ? incompleteReason : undefined,
+          incompleteReason:
+            selectedStatus === "incomplete" ? incompleteReason : undefined,
         }),
       });
 
@@ -55,7 +90,7 @@ export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: 
 
       toast.success(`Todo marked as ${selectedStatus}`);
       setIsStatusDialogOpen(false);
-      
+
       // Call the onUpdate callback to refresh the todo list
       if (onUpdate) {
         onUpdate();
@@ -69,7 +104,7 @@ export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: 
 
   const handleDelete = async () => {
     setIsSubmitting(true);
-    
+
     try {
       const response = await fetch(`/api/todos/${todo._id}`, {
         method: "DELETE",
@@ -81,7 +116,7 @@ export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: 
 
       toast.success("Todo deleted successfully");
       setIsDeleteDialogOpen(false);
-      
+
       // Call the onDelete callback to refresh the todo list
       if (onDelete) {
         onDelete();
@@ -95,7 +130,7 @@ export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: 
 
   const item = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
+    show: { opacity: 1, y: 0 },
   };
 
   return (
@@ -110,7 +145,9 @@ export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: 
                 ) : (
                   <CircleDashed className="h-5 w-5 text-amber-500" />
                 )}
-                <h3 className="font-semibold tracking-tight text-lg">{todo.title}</h3>
+                <h3 className="font-semibold tracking-tight text-lg">
+                  {todo.title}
+                </h3>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="outline" className="flex items-center gap-1">
@@ -125,9 +162,13 @@ export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: 
                   <User className="h-3 w-3" />
                   {todo.assignedTo.name}
                 </Badge>
-                <Badge 
+                <Badge
                   variant={todo.status === "complete" ? "outline" : "default"}
-                  className={`${todo.status === "complete" ? "bg-green-500/10 text-green-700 hover:bg-green-500/20" : "bg-amber-500/10 text-amber-700 hover:bg-amber-500/20"}`}
+                  className={`${
+                    todo.status === "complete"
+                      ? "bg-green-500/10 text-green-700 hover:bg-green-500/20"
+                      : "bg-amber-500/10 text-amber-700 hover:bg-amber-500/20"
+                  }`}
                 >
                   {todo.status === "complete" ? "Completed" : "Pending"}
                 </Badge>
@@ -157,7 +198,7 @@ export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: 
           <p className="text-sm text-muted-foreground">
             {todo.description || "No description provided"}
           </p>
-          
+
           {todo.status === "incomplete" && todo.incompleteReason && (
             <div className="mt-3 rounded-md bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
               <p className="font-medium">Reason for incomplete status:</p>
@@ -167,9 +208,17 @@ export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: 
         </CardContent>
         <CardFooter className="flex justify-between border-t px-6 py-3">
           <div className="text-xs text-muted-foreground">
-            Created by {todo.createdBy.name}
+            Created by{" "}
+            <Badge variant={"outline"}>{todo.createdBy.name}</Badge>{" "}
+            on{" "}
+            <Badge variant={"outline"}>
+              {format(new Date(todo.createdAt), "MMMM d, yyyy 'at' h:mm a")}
+            </Badge>
           </div>
-          <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+          <Dialog
+            open={isStatusDialogOpen}
+            onOpenChange={setIsStatusDialogOpen}
+          >
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
                 Update Status
@@ -179,10 +228,11 @@ export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: 
               <DialogHeader>
                 <DialogTitle>Update Todo Status</DialogTitle>
                 <DialogDescription>
-                  Choose a status for this todo. If marking as incomplete, please provide a reason.
+                  Choose a status for this todo. If marking as incomplete,
+                  please provide a reason.
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-4 py-4">
                 <Select
                   value={selectedStatus}
@@ -207,7 +257,7 @@ export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: 
                   />
                 )}
               </div>
-              
+
               <DialogFooter>
                 <Button
                   variant="outline"
@@ -216,10 +266,7 @@ export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: 
                 >
                   Cancel
                 </Button>
-                <Button
-                  onClick={handleStatusChange}
-                  disabled={isSubmitting}
-                >
+                <Button onClick={handleStatusChange} disabled={isSubmitting}>
                   Update Status
                 </Button>
               </DialogFooter>
@@ -233,10 +280,11 @@ export default function TodoItem({ todo, isAdmin = false, onUpdate, onDelete }: 
           <DialogHeader>
             <DialogTitle>Delete Todo</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this todo? This action cannot be undone.
+              Are you sure you want to delete this todo? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
-          
+
           <DialogFooter>
             <Button
               variant="outline"
