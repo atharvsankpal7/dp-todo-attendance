@@ -42,7 +42,7 @@ export async function GET(req: Request) {
     const todos = await Todo.find(query)
       .populate("assignedTo", "name email")
       .populate("createdBy", "name email")
-      .sort({ status: -1, dueDate: -1 }); // send incomplete tasks first
+      .sort({ status: -1, dueDate: 1 }); // send incomplete tasks first
 
     return NextResponse.json(todos);
   } catch (error) {
