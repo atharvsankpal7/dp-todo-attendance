@@ -116,6 +116,7 @@ export async function PUT(
         todo.incompleteReason = incompleteReason;
       } else if (status === "complete") {
         todo.incompleteReason = undefined;
+        todo.priority = "none";
       }
     }
 
