@@ -34,13 +34,20 @@ const TodoSchema = new mongoose.Schema(
       ref: "User",
       required: [true, "Creator is required"],
     },
-    images: [{
-      type: String,
-      trim: true,
-    }],
+    images: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     noteId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Note",
+    },
+    priority: {
+      type: String,
+      enum: ["urgent", "none"],
+      default: "none",
     },
   },
   {

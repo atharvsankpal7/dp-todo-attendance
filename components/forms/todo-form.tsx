@@ -10,7 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -42,9 +48,15 @@ const todoSchema = z.object({
   dueDate: z.date({
     required_error: "Due date is required",
   }),
-  dueTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Please enter a valid time in HH:mm format"),
+  dueTime: z
+    .string()
+    .regex(
+      /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
+      "Please enter a valid time in HH:mm format"
+    ),
   noteId: z.string().optional(),
   images: z.array(z.string()).optional(),
+  priority: z.enum(["urgent", "none"]).optional(),
 });
 
 type TodoFormValues = z.infer<typeof todoSchema>;
@@ -62,13 +74,21 @@ interface TodoFormProps {
   mode?: "create" | "edit";
 }
 
-export default function TodoForm({ isAdmin = false, users = [], initialData, mode = "create" }: TodoFormProps) {
+export default function TodoForm({
+  isAdmin = false,
+  users = [],
+  initialData,
+  mode = "create",
+}: TodoFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notes, setNotes] = useState([]);
   const [selectedNote, setSelectedNote] = useState(null);
   const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
   const router = useRouter();
-
+  const priorityOptions = [
+    { label: "Urgent", value: "urgent" },
+    { label: "none", value: "none" },
+  ];
   const defaultValues = initialData
     ? {
         ...initialData,
@@ -76,6 +96,7 @@ export default function TodoForm({ isAdmin = false, users = [], initialData, mod
         dueTime: format(new Date(initialData.dueDate), "HH:mm"),
         assignedTo: initialData.assignedTo._id || initialData.assignedTo,
         noteId: initialData.noteId?._id,
+        priority: initialData.priority || "none",
       }
     : {
         title: "",
@@ -105,8 +126,11 @@ export default function TodoForm({ isAdmin = false, users = [], initialData, mod
     setSelectedNote(note);
     form.setValue("description", note.description);
     form.setValue("noteId", note._id);
-    form.setValue("images", [...(form.getValues("images") || []), ...(note.images || [])]);
-    
+    form.setValue("images", [
+      ...(form.getValues("images") || []),
+      ...(note.images || []),
+    ]);
+
     // Update note's usedAsDescription status
     try {
       await fetch(`/api/notes/${note._id}`, {
@@ -121,7 +145,7 @@ export default function TodoForm({ isAdmin = false, users = [], initialData, mod
     } catch (error) {
       console.error("Error updating note status:", error);
     }
-    
+
     setIsNotesDialogOpen(false);
   };
 
@@ -132,9 +156,10 @@ export default function TodoForm({ isAdmin = false, users = [], initialData, mod
       const dueDateTime = new Date(data.dueDate);
       dueDateTime.setHours(hours, minutes);
 
-      const url = mode === "create" ? "/api/todos" : `/api/todos/${initialData._id}`;
+      const url =
+        mode === "create" ? "/api/todos" : `/api/todos/${initialData._id}`;
       const method = mode === "create" ? "POST" : "PUT";
-      
+
       const response = await fetch(url, {
         method,
         headers: {
@@ -151,7 +176,11 @@ export default function TodoForm({ isAdmin = false, users = [], initialData, mod
         throw new Error(error.message || "Failed to save todo");
       }
 
-      toast.success(mode === "create" ? "Todo created successfully" : "Todo updated successfully");
+      toast.success(
+        mode === "create"
+          ? "Todo created successfully"
+          : "Todo updated successfully"
+      );
       router.push("/todos");
       router.refresh();
     } catch (error: any) {
@@ -198,7 +227,10 @@ export default function TodoForm({ isAdmin = false, users = [], initialData, mod
                       value={field.value || ""}
                     />
                   </FormControl>
-                  <Dialog open={isNotesDialogOpen} onOpenChange={setIsNotesDialogOpen}>
+                  <Dialog
+                    open={isNotesDialogOpen}
+                    onOpenChange={setIsNotesDialogOpen}
+                  >
                     <DialogTrigger asChild>
                       <Button
                         type="button"
@@ -226,7 +258,9 @@ export default function TodoForm({ isAdmin = false, users = [], initialData, mod
                                 ? "opacity-50 cursor-not-allowed"
                                 : "hover:border-primary"
                             }`}
-                            onClick={() => !note.usedAsDescription && handleNoteSelect(note)}
+                            onClick={() =>
+                              !note.usedAsDescription && handleNoteSelect(note)
+                            }
                           >
                             <h3 className="font-medium">{note.title}</h3>
                             <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
@@ -281,6 +315,37 @@ export default function TodoForm({ isAdmin = false, users = [], initialData, mod
             />
           )}
 
+          <FormField
+            control={form.control}
+            name="priority"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Priority</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a user" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {priorityOptions.map((priority) => (
+                      <SelectItem key={priority.label} value={priority.value}>
+                        {priority.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Select the priority of the given task
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -331,11 +396,7 @@ export default function TodoForm({ isAdmin = false, users = [], initialData, mod
                   <FormLabel>Due Time</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Input
-                        type="time"
-                        {...field}
-                        className="pl-8"
-                      />
+                      <Input type="time" {...field} className="pl-8" />
                       <Clock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     </div>
                   </FormControl>
@@ -345,11 +406,7 @@ export default function TodoForm({ isAdmin = false, users = [], initialData, mod
             />
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isSubmitting}
-          >
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -363,4 +420,5 @@ export default function TodoForm({ isAdmin = false, users = [], initialData, mod
       </Form>
     </motion.div>
   );
+
 }

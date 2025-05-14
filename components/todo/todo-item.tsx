@@ -13,6 +13,7 @@ import {
   Calendar,
   Clock,
   User,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -135,18 +136,25 @@ export default function TodoItem({
 
   return (
     <motion.div variants={item} layout>
-      <Card className="overflow-hidden">
+      <Card className={`overflow-hidden ${todo.priority === "urgent" ? "border-red-500 border-2 border-dashed bg-red-50/30 dark:bg-red-950/20" : ""}`}>
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 {todo.status === "complete" ? (
                   <CheckCircle className="h-5 w-5 text-green-500" />
+                ) : todo.priority === "urgent" ? (
+                  <AlertCircle className="h-5 w-5 text-red-500 animate-pulse" />
                 ) : (
                   <CircleDashed className="h-5 w-5 text-amber-500" />
                 )}
-                <h3 className="font-semibold tracking-tight text-lg">
+                <h3 className={`font-semibold tracking-tight text-lg ${todo.priority === "urgent" ? "text-red-700 dark:text-red-400" : ""}`}>
                   {todo.title}
+                  {todo.priority === "urgent" && (
+                    <Badge variant="destructive" className="ml-2 animate-pulse">
+                      URGENT
+                    </Badge>
+                  )}
                 </h3>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -304,5 +312,4 @@ export default function TodoItem({
         </DialogContent>
       </Dialog>
     </motion.div>
-  );
-}
+  );}

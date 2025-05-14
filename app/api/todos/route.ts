@@ -42,7 +42,7 @@ export async function GET(req: Request) {
     const todos = await Todo.find(query)
       .populate("assignedTo", "name email")
       .populate("createdBy", "name email")
-      .sort({ status: -1, dueDate: 1 }); // send incomplete tasks first
+      .sort({ status: -1, priority: -1, dueDate: 1 }); // send incomplete tasks first
 
     return NextResponse.json(todos);
   } catch (error) {
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, description, assignedTo, dueDate } = await req.json();
+    const { title, description, assignedTo, dueDate, priority } = await req.json();
 
     if (!title || !dueDate) {
       return NextResponse.json(
@@ -91,6 +91,7 @@ export async function POST(req: Request) {
       dueDate: dueDateObj,
       status: "incomplete",
       createdBy: session.user.id,
+      priority,
     });
 
     // Populate the user fields
