@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Reusable components
 import { StatCard } from "@/components/dashboard/state-card";
 import { TodoListSection } from "@/components/dashboard/todo-list";
 import { LoadingSkeletons } from "@/components/dashboard/loading-skeleton";
