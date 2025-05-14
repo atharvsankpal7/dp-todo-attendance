@@ -68,7 +68,7 @@ export async function PUT(
       );
     }
 
-    const { title, description, assignedTo, dueDate, status, incompleteReason } = await req.json();
+    const { title, description, assignedTo, dueDate, status, incompleteReason, priority } = await req.json();
     
     await connectToDB();
 
@@ -98,6 +98,8 @@ export async function PUT(
     if (title) todo.title = title;
     if (description) todo.description = description;
     
+    if(priority) todo.priority = priority;
+
     // Only admin can reassign todos
     if (isAdmin && assignedTo) {
       todo.assignedTo = assignedTo;
