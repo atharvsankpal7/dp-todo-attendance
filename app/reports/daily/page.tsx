@@ -1,4 +1,3 @@
-// app/daily-report/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,13 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import {
-  CalendarIcon,
-  CheckCircle,
-  CircleDashed,
-  Loader2,
-  User,
-} from "lucide-react";
+import { CalendarIcon, CheckCircle, CircleDashed, User } from "lucide-react";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -32,6 +25,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import DailySummary from "@/components/reports/daily-summary";
+import { TodoItem } from "@/components/dashboard/todo-item";
 
 export default function DailyReportPage() {
   const { data: session, status } = useSession();
@@ -41,7 +35,6 @@ export default function DailyReportPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [todos, setTodos] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const isAdmin = session?.user?.role === "admin";
 
@@ -49,8 +42,6 @@ export default function DailyReportPage() {
     const fetchData = async () => {
       if (status === "authenticated") {
         try {
-          setLoading(true);
-
           // Fetch users if admin
           if (isAdmin) {
             const usersResponse = await fetch("/api/users");
@@ -81,8 +72,6 @@ export default function DailyReportPage() {
           setReports(reportsData);
         } catch (error) {
           console.error("Error fetching data:", error);
-        } finally {
-          setLoading(false);
         }
       } else if (status === "unauthenticated") {
         router.push("/auth/signin");
@@ -92,10 +81,16 @@ export default function DailyReportPage() {
     fetchData();
   }, [status, isAdmin, selectedDate, selectedUser, router]);
 
+  if (status === "unauthenticated") {
+    return null;
+  }
 
-
-  const completedTasks = todos.filter((todo: any) => todo.status === "complete");
-  const incompleteTasks = todos.filter((todo: any) => todo.status === "incomplete");
+  const completedTasks = todos.filter(
+    (todo: any) => todo.status === "complete"
+  );
+  const incompleteTasks = todos.filter(
+    (todo: any) => todo.status === "incomplete"
+  );
 
   const currentUserReport = reports.find(
     (report: any) => report.user._id === (selectedUser || session?.user?.id)
@@ -122,16 +117,14 @@ export default function DailyReportPage() {
               selected={selectedDate}
               onSelect={(date) => date && setSelectedDate(date)}
               initialFocus
+              toDate={new Date()}
             />
           </PopoverContent>
         </Popover>
 
         {/* User Selector */}
         {isAdmin && (
-          <Select
-            value={selectedUser}
-            onValueChange={setSelectedUser}
-          >
+          <Select value={selectedUser} onValueChange={setSelectedUser}>
             <SelectTrigger className="w-full md:w-[200px]">
               <SelectValue placeholder="Select user" />
             </SelectTrigger>
@@ -171,26 +164,21 @@ export default function DailyReportPage() {
             </div>
 
             <div className="mt-6">
-              <h4 className="font-medium mb-3">Completed Tasks</h4>
-              {completedTasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No completed tasks for today</p>
-              ) : (
+              <h4 className="font-medium mb-3">Tasks</h4>
+              {incompleteTasks.length <= 0 && completedTasks.length <= 0 && (
+                <p className="text-sm text-muted-foreground">No tasks found.</p>
+              )}
+              {incompleteTasks.length > 0 && (
+                <div className="space-y-2">
+                  {incompleteTasks.map((todo: any) => (
+                    <TodoItem key={todo._id} todo={todo} />
+                  ))}
+                </div>
+              )}
+              {completedTasks.length > 0 && (
                 <div className="space-y-2">
                   {completedTasks.map((todo: any) => (
-                    <div
-                      key={todo._id}
-                      className="flex items-start gap-2 p-2 rounded-md bg-muted/50"
-                    >
-                      <CheckCircle className="h-4 w-4 text-green-500 mt-1" />
-                      <div>
-                        <p className="text-sm font-medium">{todo.title}</p>
-                        {todo.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2">
-                            {todo.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                    <TodoItem key={todo._id} todo={todo} />
                   ))}
                 </div>
               )}
@@ -222,15 +210,14 @@ export default function DailyReportPage() {
           <CardContent>
             <div className="space-y-6">
               {reports.map((report: any) => (
-                <div
-                  key={report._id}
-                  className="p-4 rounded-lg border"
-                >
+                <div key={report._id} className="p-4 rounded-lg border">
                   <div className="flex items-center gap-2 mb-2">
                     <User className="h-4 w-4" />
                     <span className="font-medium">{report.user.name}</span>
                   </div>
-                  <p className="text-sm whitespace-pre-wrap">{report.summary}</p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    {report.summary}
+                  </p>
                   <div className="mt-2 text-xs text-muted-foreground">
                     Last updated: {format(new Date(report.updatedAt), "PPp")}
                   </div>

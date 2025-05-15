@@ -109,7 +109,6 @@ export async function POST(req: Request) {
       tasksCompleted,
     });
 
-
     const populatedReport = await DailyReport.findById(newReport._id)
       .populate("user", "name email")
       .populate("tasksCompleted", "title status");
