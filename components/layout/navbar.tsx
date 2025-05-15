@@ -1,5 +1,4 @@
-"use client";
-
+"use client"
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -37,6 +36,11 @@ export default function Navbar() {
       label: "Todos",
       href: "/todos",
       active: pathname === "/todos" || pathname.startsWith("/todos/"),
+    },
+    {
+      label: "Daily Report",
+      href: "/reports/daily",
+      active: pathname === "/reports/daily",
     },
   ];
   
