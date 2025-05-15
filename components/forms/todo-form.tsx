@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -84,11 +84,13 @@ export default function TodoForm({
   const [notes, setNotes] = useState([]);
   const [selectedNote, setSelectedNote] = useState(null);
   const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
+  const [titleSuggestion, setTitleSuggestion] = useState<string | null>(null);
   const router = useRouter();
   const priorityOptions = [
     { label: "Urgent", value: "urgent" },
     { label: "none", value: "none" },
   ];
+
   const defaultValues = initialData
     ? {
         ...initialData,
@@ -111,6 +113,42 @@ export default function TodoForm({
     defaultValues,
   });
 
+  const fetchTitleSuggestion = async (title: string) => {
+    if (title.length >= 3) {
+      try {
+        const response = await fetch(
+          `/api/todos/suggestions?title=${encodeURIComponent(title)}`
+        );
+        const data = await response.json();
+
+        setTitleSuggestion(
+          data.suggestion?.title.replace(
+            /-(\d+)$/,
+            (match: any, num: string) => `-${String(parseInt(num) + 1).padStart(2, "0")}`
+          ) || null
+        );
+      } catch (error) {
+        console.error("Error fetching title suggestion:", error);
+        setTitleSuggestion(null);
+      }
+    } else {
+      setTitleSuggestion(null);
+    }
+  };
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    form.setValue("title", value);
+    fetchTitleSuggestion(value);
+  };
+
+  const handleSuggestionClick = () => {
+    if (titleSuggestion) {
+      form.setValue("title", titleSuggestion);
+      setTitleSuggestion(null);
+    }
+  };
+
   const fetchNotes = async () => {
     try {
       const response = await fetch("/api/notes");
@@ -131,7 +169,6 @@ export default function TodoForm({
       ...(note.images || []),
     ]);
 
-    // Update note's usedAsDescription status
     try {
       await fetch(`/api/notes/${note._id}`, {
         method: "PUT",
@@ -205,9 +242,23 @@ export default function TodoForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Title</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter todo title" {...field} />
-                </FormControl>
+                <div className="relative">
+                  <FormControl>
+                    <Input
+                      placeholder="Enter todo title"
+                      {...field}
+                      onChange={handleTitleChange}
+                    />
+                  </FormControl>
+                  {titleSuggestion && (
+                    <div
+                      className="absolute z-10 w-full mt-1 p-2 bg-background border rounded-md shadow-lg cursor-pointer hover:bg-accent"
+                      onClick={handleSuggestionClick}
+                    >
+                      {titleSuggestion}
+                    </div>
+                  )}
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -420,5 +471,4 @@ export default function TodoForm({
       </Form>
     </motion.div>
   );
-
 }
