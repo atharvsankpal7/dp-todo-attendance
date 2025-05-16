@@ -35,12 +35,10 @@ export default function EditNotePage() {
       }
     };
 
-    if (status === "authenticated" && session?.user?.role === "admin") {
+    if (status === "authenticated") {
       fetchNote();
     } else if (status === "unauthenticated") {
       router.push("/auth/signin");
-    } else if (status === "authenticated" && session?.user?.role !== "admin") {
-      router.push("/dashboard");
     }
   }, [status, session, router, noteId]);
 

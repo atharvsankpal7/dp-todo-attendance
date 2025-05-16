@@ -9,12 +9,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function NotesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState(null);
 
   useEffect(() => {
     const fetchNotes = async () => {
@@ -37,6 +49,23 @@ export default function NotesPage() {
       router.push("/auth/signin");
     }
   }, [status, router]);
+
+  const handleDelete = async (noteId: string | null) => {
+    if (!noteToDelete) return;
+    try {
+      const response = await fetch(`/api/notes/${noteId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setNotes(notes.filter((note: { _id: string }) => note._id !== noteId));
+      }
+    } catch (error) {
+      console.error("Error deleting note:", error);
+    }
+    setIsDeleteDialogOpen(false);
+    setNoteToDelete(null);
+  };
 
   if (status === "loading" || loading) {
     return (
@@ -75,12 +104,11 @@ export default function NotesPage() {
       >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <h1 className="text-3xl font-bold">Notes</h1>
-          {session?.user?.role === "admin" && (
-            <Button onClick={() => router.push("/admin/notes/new")}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Create New Note
-            </Button>
-          )}
+
+          <Button onClick={() => router.push("/notes/new")}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create New Note
+          </Button>
         </div>
       </motion.div>
 
@@ -119,12 +147,23 @@ export default function NotesPage() {
                     <span>{note.images.length} image(s)</span>
                   )}
                 </div>
+
                 {session?.user?.role === "admin" && (
                   <div className="mt-4 flex justify-end gap-2">
                     <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setNoteToDelete(note._id);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                    >
+                      Delete
+                    </Button>
+                    <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => router.push(`/admin/notes/${note._id}`)}
+                      onClick={() => router.push(`/notes/${note._id}`)}
                     >
                       Edit
                     </Button>
@@ -135,6 +174,27 @@ export default function NotesPage() {
           </motion.div>
         ))}
       </motion.div>
+
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              note.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel >Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => handleDelete(noteToDelete)}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

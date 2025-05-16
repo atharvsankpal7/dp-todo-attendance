@@ -64,7 +64,7 @@ export default function NoteForm({ initialData, mode = "create" }: NoteFormProps
       }
 
       toast.success(mode === "create" ? "Note created successfully" : "Note updated successfully");
-      router.push("/admin/notes");
+      router.push("/notes");
       router.refresh();
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");

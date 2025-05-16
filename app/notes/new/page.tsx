@@ -24,7 +24,7 @@ export default function NewNotePage() {
     );
   }
 
-  if (status === "unauthenticated" || session?.user?.role !== "admin") {
+  if (status === "unauthenticated") {
     router.push("/dashboard");
     return null;
   }

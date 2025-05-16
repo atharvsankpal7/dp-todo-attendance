@@ -5,13 +5,28 @@ import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { ChevronLeft, Loader2, CheckCircle, CircleDashed, Calendar, Clock } from "lucide-react";
+import {
+  ChevronLeft,
+  Loader2,
+  CheckCircle,
+  CircleDashed,
+  Calendar,
+  Clock,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import Todo from "@/models/todo";
+import { TodoItem } from "@/components/dashboard/todo-item";
 
 export default function UserProfilePage() {
   const { data: session, status } = useSession();
@@ -44,7 +59,10 @@ export default function UserProfilePage() {
         } finally {
           setLoading(false);
         }
-      } else if (status === "authenticated" && session?.user?.role !== "admin") {
+      } else if (
+        status === "authenticated" &&
+        session?.user?.role !== "admin"
+      ) {
         router.push("/dashboard");
       } else if (status === "unauthenticated") {
         router.push("/auth/signin");
@@ -75,8 +93,8 @@ export default function UserProfilePage() {
         <div className="flex justify-center items-center min-h-[50vh]">
           <div className="flex flex-col items-center">
             <p className="text-lg">User not found</p>
-            <Button 
-              variant="link" 
+            <Button
+              variant="link"
               className="mt-2"
               onClick={() => router.push("/admin/users")}
             >
@@ -89,24 +107,35 @@ export default function UserProfilePage() {
   }
 
   // Calculate user stats
-  const totalTodos = todos.length;
-  const completedTodos = todos.filter(todo => todo.status === "complete").length;
-  const incompleteTodos = totalTodos - completedTodos;
-  const completionRate = totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
+  const totalTodosCount = todos.length;
+  const completedTodosCount = todos.filter(
+    (todo) => todo.status === "complete"
+  ).length;
+  const incompleteTodosCount = totalTodosCount - completedTodosCount;
+  const completionRate =
+    totalTodosCount > 0
+      ? Math.round((completedTodosCount / totalTodosCount) * 100)
+      : 0;
 
   // Get today's todos
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayTodos = todos.filter(todo => {
+  const todayTodos = todos.filter((todo) => {
     const todoDate = new Date(todo.dueDate);
     todoDate.setHours(0, 0, 0, 0);
     return todoDate.getTime() === today.getTime();
   });
+  const incompleteTodosList = todos.filter(
+    (todo) => todo.status === "incomplete"
+  );
 
   // Get recently completed todos
-  const recentlyCompletedTodos = todos
-    .filter(todo => todo.status === "complete")
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+  const recentlyCompletedTodosList = todos
+    .filter((todo) => todo.status === "complete")
+    .sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    )
     .slice(0, 5);
 
   return (
@@ -143,11 +172,11 @@ export default function UserProfilePage() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Total Tasks</CardDescription>
-            <CardTitle className="text-4xl">{totalTodos}</CardTitle>
+            <CardTitle className="text-4xl">{totalTodosCount}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              {completedTodos} completed, {incompleteTodos} remaining
+              {completedTodosCount} completed, {incompleteTodosCount} remaining
             </p>
           </CardContent>
         </Card>
@@ -169,8 +198,10 @@ export default function UserProfilePage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              {todayTodos.filter(t => t.status === "complete").length} completed,{" "}
-              {todayTodos.filter(t => t.status === "incomplete").length} remaining
+              {todayTodos.filter((t) => t.status === "complete").length}{" "}
+              completed,{" "}
+              {todayTodos.filter((t) => t.status === "incomplete").length}{" "}
+              remaining
             </p>
           </CardContent>
         </Card>
@@ -179,41 +210,18 @@ export default function UserProfilePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Today&apos;s Tasks</CardTitle>
+            <CardTitle>Incomplete Tasks</CardTitle>
           </CardHeader>
           <CardContent>
             {todayTodos.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Calendar className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <p className="text-muted-foreground">No tasks due today</p>
+                <p className="text-muted-foreground">No incomplete tasks</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {todayTodos.map((todo) => (
-                  <div
-                    key={todo._id}
-                    className="flex items-start justify-between p-4 rounded-lg border"
-                  >
-                    <div className="flex items-start gap-3">
-                      {todo.status === "complete" ? (
-                        <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                      ) : (
-                        <CircleDashed className="h-5 w-5 text-amber-500 mt-0.5" />
-                      )}
-                      <div>
-                        <p className="font-medium">{todo.title}</p>
-                        <p className="text-sm text-muted-foreground line-clamp-1">
-                          {todo.description || "No description"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Clock className="h-3 w-3 mr-1" />
-                      <span>
-                        {format(new Date(todo.dueDate), "h:mm a")}
-                      </span>
-                    </div>
-                  </div>
+                {incompleteTodosList.map((todo) => (
+                  <TodoItem key ={todo.id} todo={todo} />
                 ))}
               </div>
             )}
@@ -225,14 +233,14 @@ export default function UserProfilePage() {
             <CardTitle>Recently Completed</CardTitle>
           </CardHeader>
           <CardContent>
-            {recentlyCompletedTodos.length === 0 ? (
+            {recentlyCompletedTodosList.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <CheckCircle className="h-12 w-12 text-muted-foreground/50 mb-4" />
                 <p className="text-muted-foreground">No completed tasks yet</p>
               </div>
             ) : (
               <div className="space-y-4">
-                {recentlyCompletedTodos.map((todo) => (
+                {recentlyCompletedTodosList.map((todo) => (
                   <div
                     key={todo._id}
                     className="flex items-start justify-between p-4 rounded-lg border"
@@ -242,7 +250,8 @@ export default function UserProfilePage() {
                       <div>
                         <p className="font-medium">{todo.title}</p>
                         <p className="text-sm text-muted-foreground">
-                          Completed on {format(new Date(todo.updatedAt), "MMM d, yyyy")}
+                          Completed on{" "}
+                          {format(new Date(todo.updatedAt), "MMM d, yyyy")}
                         </p>
                       </div>
                     </div>

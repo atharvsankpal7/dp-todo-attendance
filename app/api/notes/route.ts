@@ -7,12 +7,9 @@ import { authOptions } from "@/lib/auth-options";
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     await connectToDB();
@@ -34,8 +31,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session || session.user.role !== "admin") {
+
+    if (!session?.user) {
       return NextResponse.json(
         { message: "Unauthorized. Admin access required." },
         { status: 403 }
@@ -43,7 +40,7 @@ export async function POST(req: Request) {
     }
 
     const { title, description, images } = await req.json();
-    
+
     if (!title || !description) {
       return NextResponse.json(
         { message: "Title and description are required" },
