@@ -155,7 +155,8 @@ export default function UserProfilePage() {
           Back to Users
         </Button>
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold">{user.name}&apos;s Profile</h1>
+
+          <h1 className="text-3xl font-bold">{user.name}'s Profile</h1>
           <p className="text-muted-foreground">{user.email}</p>
           <div className="flex items-center gap-2">
             <Badge variant={user.role === "admin" ? "default" : "outline"}>
@@ -213,7 +214,7 @@ export default function UserProfilePage() {
             <CardTitle>Incomplete Tasks</CardTitle>
           </CardHeader>
           <CardContent>
-            {todayTodos.length === 0 ? (
+            {incompleteTodosList.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Calendar className="h-12 w-12 text-muted-foreground/50 mb-4" />
                 <p className="text-muted-foreground">No incomplete tasks</p>
@@ -221,7 +222,7 @@ export default function UserProfilePage() {
             ) : (
               <div className="space-y-4">
                 {incompleteTodosList.map((todo) => (
-                  <TodoItem key ={todo.id} todo={todo} />
+                  <TodoItem key={todo._id} todo={todo} />
                 ))}
               </div>
             )}
