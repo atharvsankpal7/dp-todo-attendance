@@ -5,12 +5,26 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { Loader2, Search, Shield, User } from "lucide-react";
+import {
+  Loader2,
+  Search,
+  Shield,
+  User,
+  PlusIcon,
+  PlusCircleIcon,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
+import { AddUserDialog } from "@/components/admin/add-user-dialog";
+import { EditUserDialog } from "@/components/admin/edit-user-dialog";
 export default function UsersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -30,7 +44,10 @@ export default function UsersPage() {
         } finally {
           setLoading(false);
         }
-      } else if (status === "authenticated" && session?.user?.role !== "admin") {
+      } else if (
+        status === "authenticated" &&
+        session?.user?.role !== "admin"
+      ) {
         router.push("/dashboard");
       } else if (status === "unauthenticated") {
         router.push("/auth/signin");
@@ -42,9 +59,10 @@ export default function UsersPage() {
     }
   }, [status, session, router]);
 
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (status === "loading" || loading) {
@@ -65,24 +83,31 @@ export default function UsersPage() {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const item = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
+    show: { opacity: 1, y: 0 },
   };
 
   return (
-    <div className="container py-6 md:py-10">
+    <div className="container py-6 md:py-10 ">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
+        className="flex justify-between mb-5"
       >
-        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">User Management</h1>
+        <h1 className="text-2xl md:text-3xl font-bold">User Management</h1>
+        <AddUserDialog >
+          <Button className="w-full sm:w-auto">
+            <PlusCircleIcon className="mr-2 h-5 w-5" />
+            Add User
+          </Button>
+        </AddUserDialog>
       </motion.div>
 
       <div className="mb-4 md:mb-6">
@@ -132,18 +157,22 @@ export default function UsersPage() {
                     </div>
                     <div>
                       <p className="font-medium">{user.name}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {user.email}
+                      </p>
                     </div>
                   </div>
                   <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 w-full md:w-auto">
-                    <Badge variant={user.role === "admin" ? "default" : "outline"}>
+                    <Badge
+                      variant={user.role === "admin" ? "default" : "outline"}
+                    >
                       {user.role === "admin" ? "Admin" : "User"}
                     </Badge>
                     <div className="text-sm text-muted-foreground">
                       Joined {format(new Date(user.createdAt), "MMM d, yyyy")}
                     </div>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       size="sm"
                       onClick={() => router.push(`/admin/users/${user._id}`)}
                       className="w-full md:w-auto"

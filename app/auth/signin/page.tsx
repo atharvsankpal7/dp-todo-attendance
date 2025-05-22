@@ -88,7 +88,7 @@ function SignInContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -180,17 +180,7 @@ function SignInContent() {
               </form>
             </Form>
           </CardContent>
-          <CardFooter className="flex flex-col items-center gap-2">
-            <div className="text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/auth/signup"
-                className="text-primary hover:underline"
-              >
-                Sign up
-              </Link>
-            </div>
-          </CardFooter>
+        
         </Card>
       </motion.div>
     </div>
@@ -201,7 +191,7 @@ export default function SigninPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
+        <div className=" flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       }
