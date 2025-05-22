@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { z } from "zod";
 import { format, differenceInDays } from "date-fns";
-import { ChevronLeft, Upload, Loader2 } from "lucide-react";
+import { ChevronLeft, Upload, Loader2, X } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { PDFDocument } from "pdf-lib";
 
@@ -55,8 +56,6 @@ const departments = [
 ] as const;
 
 const formSchema = z.object({
-  employeeName: z.string().min(2, "Name must be at least 2 characters"),
-  employeeId: z.string().min(1, "Employee ID is required"),
   department: z.string().min(1, "Department is required"),
   leaveType: z.string().min(1, "Leave type is required"),
   otherReason: z.string().optional(),
@@ -73,14 +72,13 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function LeavePage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      employeeName: "",
-      employeeId: "",
       department: "",
       leaveType: "",
       otherReason: "",
@@ -105,112 +103,173 @@ export default function LeavePage() {
       if (!isValidSize) toast.error(`File too large: ${file.name}`);
       return isValidType && isValidSize;
     });
-    setFiles(validFiles);
+    setFiles(prev => [...prev, ...validFiles]);
   };
 
-  const generateLeaveLetter = async (data: FormValues) => {
-    // Create new PDF document
-    const doc = new jsPDF();
-    
-    // Add company letterhead
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text("Company Name", 105, 20, { align: "center" });
-    
-    // Add current date
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(format(new Date(), "MMMM d, yyyy"), 20, 40);
-    
-    // Add recipient details
-    doc.text("HR Manager", 20, 55);
-    doc.text("Company Name", 20, 62);
-    
-    // Add subject line
-    doc.setFont("helvetica", "bold");
-    doc.text("Subject: Leave Application", 20, 82);
-    
-    // Add letter content
-    doc.setFont("helvetica", "normal");
-    const content = `Dear Sir/Madam,
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
-I, ${data.employeeName} (Employee ID: ${data.employeeId}) from the ${data.department} department, would like to request leave from ${format(data.startDate, "MMMM d, yyyy")} to ${format(data.endDate, "MMMM d, yyyy")} (${totalDays} days) for ${data.leaveType === "other" ? data.otherReason : data.leaveType}.
-
-Reason for leave:
-${data.reason}
-
-I will ensure all my responsibilities are properly handed over and will be available on phone if needed.
-
-Thank you for your consideration.
-
-Sincerely,
-${data.employeeName}
-${data.employeeId}`;
-
-    const contentLines = doc.splitTextToSize(content, 170);
-    doc.text(contentLines, 20, 100);
+    const generateLeaveLetter = async (data: FormValues) => {
+        // Create new PDF document
+        const doc = new jsPDF();
     
-    // Add approval section
-    doc.text("Approved By: _________________", 20, 230);
-    doc.text("Date: _________________", 20, 240);
+        // Set default font
+        doc.setFont("helvetica");
+    
+        // Add company letterhead with styling
+        doc.setFillColor(240, 240, 240);
+        doc.rect(0, 0, 210, 30, 'F');
+        doc.setFontSize(20);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(50, 50, 150);
+        doc.text("DISPLAY PROMOTION", 105, 20, { align: "center" });
+    
+        // Add decorative line
+        doc.setDrawColor(50, 50, 150);
+        doc.setLineWidth(0.5);
+        doc.line(20, 32, 190, 32);
+    
+        // Add current date (right aligned)
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(0, 0, 0);
+        doc.text(format(new Date(), "MMMM d, yyyy"), 190, 40, { align: "right" });
+    
+        // Add recipient details with styling
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("To,", 20, 50);
+        doc.setFont("helvetica", "normal");
+        doc.text("The Manager", 20, 57);
+        doc.text("Display Promotion", 20, 64);
+        doc.text("Company Address", 20, 71);
+    
+        // Add subject line with background
+        doc.setFillColor(240, 240, 240);
+        doc.rect(20, 80, 170, 10, 'F');
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("Subject: Leave Application", 25, 87);
+    
+        // Add salutation
+        doc.setFont("helvetica", "normal");
+        doc.text("Dear Sir/Madam,", 20, 100);
+    
+        // Add letter content with proper spacing
+        const content = `I, ${session?.user?.name} from the ${data.department} department, would like to formally request leave from ${format(data.startDate, "MMMM d, yyyy")} to ${format(data.endDate, "MMMM d, yyyy")} (${totalDays} days) for ${data.leaveType === "other" ? data.otherReason : data.leaveType}.
 
-    // Convert to PDF bytes
-    const pdfBytes = doc.output('arraybuffer');
+    Reason for leave:
+    ${data.reason}
+
+    I have ensured that all my pending responsibilities are properly delegated and will remain available on my mobile phone ("provided in HR records") for any urgent matters during my absence.
+
+    I appreciate your consideration of my request and will be grateful for your approval.`;
+
+        const contentLines = doc.splitTextToSize(content, 170);
+        doc.text(contentLines, 20, 110);
     
-    // Create a new PDF document using pdf-lib
-    const mergedPdf = await PDFDocument.create();
+        // Add closing
+        doc.text("Thank you for your understanding.", 20, 180);
+        doc.text("Yours sincerely,", 20, 195);
+        doc.setFont("helvetica", "bold");
+        doc.text(session?.user?.name!, 20, 202);
+        doc.setFont("helvetica", "normal");
+        doc.text(data.department, 20, 209);
     
-    // Add the leave letter
-    const letterPdf = await PDFDocument.load(pdfBytes);
-    const [letterPage] = await mergedPdf.copyPages(letterPdf, [0]);
-    mergedPdf.addPage(letterPage);
+        // Add approval section with styling
+        doc.setDrawColor(200, 200, 200);
+        doc.line(20, 220, 190, 220);
+        doc.setFontSize(11);
+        doc.text("For Office Use Only", 105, 228, { align: "center" });
+        doc.text("Approved: _________________", 20, 240);
+        doc.text("Date: _________________", 120, 240);
+        doc.text("Manager's Signature: _________________", 20, 250);
     
-    // Add supporting documents
-    for (const file of files) {
-      try {
-        const fileArrayBuffer = await file.arrayBuffer();
-        if (file.type === 'application/pdf') {
-          const docPdf = await PDFDocument.load(fileArrayBuffer);
-          const docPages = await mergedPdf.copyPages(docPdf, docPdf.getPageIndices());
-          docPages.forEach(page => mergedPdf.addPage(page));
-        } else {
-          // For images, create a new page and embed the image
-          const page = mergedPdf.addPage();
-          let image;
-          if (file.type === 'image/jpeg') {
-            image = await mergedPdf.embedJpg(fileArrayBuffer);
-          } else if (file.type === 'image/png') {
-            image = await mergedPdf.embedPng(fileArrayBuffer);
-          }
-          if (image) {
-            const { width, height } = image.scale(0.5);
-            page.drawImage(image, {
-              x: page.getWidth() / 2 - width / 2,
-              y: page.getHeight() / 2 - height / 2,
-              width,
-              height,
-            });
-          }
+        // Convert to PDF bytes
+        const pdfBytes = doc.output('arraybuffer');
+    
+        // Create a new PDF document using pdf-lib
+        const mergedPdf = await PDFDocument.create();
+    
+        // Add the leave letter
+        const letterPdf = await PDFDocument.load(pdfBytes);
+        const [letterPage] = await mergedPdf.copyPages(letterPdf, [0]);
+        mergedPdf.addPage(letterPage);
+    
+        // Add supporting documents with better handling
+        if (files && files.length > 0) {
+            doc.addPage();
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text("Supporting Documents", 105, 20, { align: "center" });
+        
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                try {
+                    const fileArrayBuffer = await file.arrayBuffer();
+                    if (file.type === 'application/pdf') {
+                        const docPdf = await PDFDocument.load(fileArrayBuffer);
+                        const docPages = await mergedPdf.copyPages(docPdf, docPdf.getPageIndices());
+                        docPages.forEach(page => mergedPdf.addPage(page));
+                    } else {
+                        // For images, create a new page with proper scaling
+                        const page = mergedPdf.addPage([600, 800]);
+                        let image;
+                        try {
+                            if (file.type === 'image/jpeg') {
+                                image = await mergedPdf.embedJpg(fileArrayBuffer);
+                            } else if (file.type === 'image/png') {
+                                image = await mergedPdf.embedPng(fileArrayBuffer);
+                            }
+                        
+                            if (image) {
+                                // Scale image to fit page while maintaining aspect ratio
+                                const { width, height } = image.scaleToFit(500, 700);
+                                page.drawImage(image, {
+                                    x: page.getWidth() / 2 - width / 2,
+                                    y: page.getHeight() / 2 - height / 2,
+                                    width,
+                                    height,
+                                });
+                            
+                                // Add caption
+                                page.drawText(`Attachment ${i + 1}: ${file.name}`, {
+                                    x: 50,
+                                    y: 30,
+                                    size: 10,
+                                });
+                            }
+                        } catch (error) {
+                            console.error(`Error embedding image ${file.name}:`, error);
+                            page.drawText(`Could not display ${file.name}`, {
+                                x: 50,
+                                y: 400,
+                                size: 12,
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Error processing file ${file.name}:`, error);
+                    toast.error(`Error processing file: ${file.name}`);
+                }
+            }
         }
-      } catch (error) {
-        console.error(`Error processing file ${file.name}:`, error);
-        toast.error(`Error processing file: ${file.name}`);
-      }
-    }
     
-    // Save and download the merged PDF
-    const mergedBytes = await mergedPdf.save();
-    const blob = new Blob([mergedBytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `leave_application_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
+        // Save and download the merged PDF with better filename
+        const mergedBytes = await mergedPdf.save();
+        const blob = new Blob([mergedBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Leave_Application_${session?.user?.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    
+        toast.success("Leave application generated successfully!");
+    };
   const onSubmit = async (data: FormValues) => {
     try {
       setIsSubmitting(true);
@@ -250,34 +309,6 @@ ${data.employeeId}`;
       <div className="max-w-2xl mx-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="employeeName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Employee Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your full name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="employeeId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Employee ID</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your employee ID" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="department"
@@ -452,7 +483,7 @@ ${data.employeeId}`;
               )}
             />
 
-            <div className="space-y-2">
+            <div className="space-y-4">
               <FormLabel>Supporting Documents</FormLabel>
               <div className="flex items-center gap-2">
                 <Input
@@ -462,13 +493,31 @@ ${data.employeeId}`;
                   onChange={handleFileChange}
                   className="flex-1"
                 />
-                <Button type="button" variant="outline" onClick={() => setFiles([])}>
-                  Clear
-                </Button>
               </div>
+
               {files.length > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  {files.length} file(s) selected
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {files.length} file(s) selected
+                  </p>
+                  <div className="space-y-2">
+                    {files.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-2 border rounded-md"
+                      >
+                        <span className="text-sm truncate">{file.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
