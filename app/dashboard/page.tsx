@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,7 +46,9 @@ export default function DashboardPage() {
   const completedTodos = todos.filter((t) => t.status === "complete").length;
   const incompleteTodos = totalTodos - completedTodos;
   const completionRate =
-    totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
+    totalTodos > 0
+      ? Math.round((completedTodos / totalTodos) * 100)
+      : 0;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -95,30 +97,34 @@ export default function DashboardPage() {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <Button onClick={() => router.push("/todos/new")} className="w-full md:w-auto">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create New Todo
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => router.push("/todos/new")} className="w-full md:w-auto">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create New Todo
+            </Button>
+            <Button onClick={() => router.push("/leave")} variant="outline" className="w-full md:w-auto">
+              <FileText className="mr-2 h-4 w-4" />
+              Apply Leave
+            </Button>
+          </div>
         </div>
       </motion.div>
 
-      {/* Stats */}
-      <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <motion.div variants={item}>
           <StatCard title="Total Tasks" value={totalTodos} description={`${completedTodos} completed, ${incompleteTodos} remaining`} />
         </motion.div>
         <motion.div variants={item}>
           <StatCard title="Completion Rate" value={`${completionRate}%`}>
-            <Progress value={completionRate} className="h-2 mt-2" />
+            <Progress value={completionRate} className="h-2" />
           </StatCard>
         </motion.div>
         <motion.div variants={item}>
           <StatCard title="Due Today" value={todayTodos.length} description={`${todayTodos.filter(t => t.status === "complete").length} completed, ${todayTodos.filter(t => t.status === "incomplete").length} remaining`} />
         </motion.div>
-      </motion.div>
+      </div>
 
-      {/* Today & Upcoming */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.5 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <Tabs defaultValue="today">
             <TabsList className="mb-4">
@@ -146,7 +152,6 @@ export default function DashboardPage() {
           </Tabs>
         </div>
 
-        {/* Recently Completed */}
         <TodoListSection
           title="Recently Completed"
           todos={recentlyCompletedTodos}
@@ -154,7 +159,7 @@ export default function DashboardPage() {
           buttonText="Go to task list"
           buttonAction={() => router.push("/todos")}
         />
-      </motion.div>
+      </div>
     </div>
   );
 }
