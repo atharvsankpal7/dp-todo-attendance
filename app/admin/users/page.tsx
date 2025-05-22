@@ -25,12 +25,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AddUserDialog } from "@/components/admin/add-user-dialog";
 import { EditUserDialog } from "@/components/admin/edit-user-dialog";
+
 export default function UsersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -102,7 +105,7 @@ export default function UsersPage() {
         className="flex justify-between mb-5"
       >
         <h1 className="text-2xl md:text-3xl font-bold">User Management</h1>
-        <AddUserDialog >
+        <AddUserDialog>
           <Button className="w-full sm:w-auto">
             <PlusCircleIcon className="mr-2 h-5 w-5" />
             Add User
@@ -171,14 +174,27 @@ export default function UsersPage() {
                     <div className="text-sm text-muted-foreground">
                       Joined {format(new Date(user.createdAt), "MMM d, yyyy")}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => router.push(`/admin/users/${user._id}`)}
-                      className="w-full md:w-auto"
-                    >
-                      View Profile
-                    </Button>
+                    <div className="flex gap-2 w-full md:w-auto">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingUser(user);
+                          setIsEditDialogOpen(true);
+                        }}
+                        className="w-full md:w-auto"
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => router.push(`/admin/users/${user._id}`)}
+                        className="w-full md:w-auto"
+                      >
+                        View Profile
+                      </Button>
+                    </div>
                   </div>
                 </motion.div>
               ))
@@ -186,6 +202,17 @@ export default function UsersPage() {
           </motion.div>
         </CardContent>
       </Card>
+
+      {editingUser && (
+        <EditUserDialog
+          user={editingUser}
+          open={isEditDialogOpen}
+          onOpenChange={(open) => {
+            setIsEditDialogOpen(open);
+            if (!open) setEditingUser(null);
+          }}
+        />
+      )}
     </div>
   );
 }
