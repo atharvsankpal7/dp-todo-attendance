@@ -22,7 +22,8 @@ export async function GET(
 
     const todo = await Todo.findById(params.id)
       .populate("assignedTo", "name email")
-      .populate("createdBy", "name email");
+      .populate("createdBy", "name email")
+      .populate("editHistory.editor", "name email");
 
     if (!todo) {
       return NextResponse.json(
@@ -59,7 +60,6 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    console.log("Deleting todo with ID:", params.id);
     
     if (!session) {
       return NextResponse.json(
@@ -68,11 +68,10 @@ export async function PUT(
       );
     }
 
-    const { title, description, assignedTo, dueDate, status, incompleteReason, priority } = await req.json();
+    const { title, description, assignedTo, dueDate, status, incompleteReason, priority, images } = await req.json();
     
     await connectToDB();
 
-    // Get the existing todo
     const todo = await Todo.findById(params.id);
     
     if (!todo) {
@@ -82,24 +81,43 @@ export async function PUT(
       );
     }
 
-    // Check permissions
-    const isOwner = todo.assignedTo.toString() === session.user.id;
+    // Check permissions - only creator and admin can edit
     const isCreator = todo.createdBy.toString() === session.user.id;
     const isAdmin = session.user.role === "admin";
 
-    if (!isOwner && !isCreator && !isAdmin) {
+    if (!isCreator && !isAdmin) {
       return NextResponse.json(
         { message: "Not authorized to update this todo" },
         { status: 403 }
       );
     }
 
+    // Create a snapshot of the current state before updating
+    const previousVersion = {
+      title: todo.title,
+      description: todo.description,
+      status: todo.status,
+      incompleteReason: todo.incompleteReason,
+      dueDate: todo.dueDate,
+      assignedTo: todo.assignedTo,
+      priority: todo.priority,
+      images: todo.images,
+    };
+
+    // Add to edit history
+    todo.editHistory.push({
+      editor: session.user.id,
+      previousVersion,
+    });
+
+    // Increment version
+    todo.version += 1;
+
     // Update fields
     if (title) todo.title = title;
     if (description) todo.description = description;
+    if (images) todo.images = images;
     
-    if(priority) todo.priority = priority;
-
     // Only admin can reassign todos
     if (isAdmin && assignedTo) {
       todo.assignedTo = assignedTo;
@@ -120,12 +138,15 @@ export async function PUT(
       }
     }
 
+    if (priority) todo.priority = priority;
+
     await todo.save();
 
     // Populate the user fields
     const updatedTodo = await Todo.findById(params.id)
       .populate("assignedTo", "name email")
-      .populate("createdBy", "name email");
+      .populate("createdBy", "name email")
+      .populate("editHistory.editor", "name email");
 
     return NextResponse.json(updatedTodo);
   } catch (error) {
@@ -153,7 +174,6 @@ export async function DELETE(
 
     await connectToDB();
 
-    // Get the existing todo
     const todo = await Todo.findById(params.id);
     
     if (!todo) {

@@ -90,74 +90,86 @@ export default function LeavePage() {
 
   const watchStartDate = form.watch("startDate");
   const watchEndDate = form.watch("endDate");
-  const totalDays = watchStartDate && watchEndDate
-    ? differenceInDays(watchEndDate, watchStartDate) + 1
-    : 0;
+  const totalDays =
+    watchStartDate && watchEndDate
+      ? differenceInDays(watchEndDate, watchStartDate) + 1
+      : 0;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
-    const validFiles = selectedFiles.filter(file => {
-      const isValidType = ['application/pdf', 'image/jpeg', 'image/png'].includes(file.type);
+    const validFiles = selectedFiles.filter((file) => {
+      const isValidType = [
+        "application/pdf",
+        "image/jpeg",
+        "image/png",
+      ].includes(file.type);
       const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB limit
       if (!isValidType) toast.error(`Invalid file type: ${file.name}`);
       if (!isValidSize) toast.error(`File too large: ${file.name}`);
       return isValidType && isValidSize;
     });
-    setFiles(prev => [...prev, ...validFiles]);
+    setFiles((prev) => [...prev, ...validFiles]);
   };
 
   const removeFile = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-    const generateLeaveLetter = async (data: FormValues) => {
-        // Create new PDF document
-        const doc = new jsPDF();
-    
-        // Set default font
-        doc.setFont("helvetica");
-    
-        // Add company letterhead with styling
-        doc.setFillColor(240, 240, 240);
-        doc.rect(0, 0, 210, 30, 'F');
-        doc.setFontSize(20);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(50, 50, 150);
-        doc.text("DISPLAY PROMOTION", 105, 20, { align: "center" });
-    
-        // Add decorative line
-        doc.setDrawColor(50, 50, 150);
-        doc.setLineWidth(0.5);
-        doc.line(20, 32, 190, 32);
-    
-        // Add current date (right aligned)
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(0, 0, 0);
-        doc.text(format(new Date(), "MMMM d, yyyy"), 190, 40, { align: "right" });
-    
-        // Add recipient details with styling
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.text("To,", 20, 50);
-        doc.setFont("helvetica", "normal");
-        doc.text("The Manager", 20, 57);
-        doc.text("Display Promotion", 20, 64);
-        doc.text("Company Address", 20, 71);
-    
-        // Add subject line with background
-        doc.setFillColor(240, 240, 240);
-        doc.rect(20, 80, 170, 10, 'F');
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.text("Subject: Leave Application", 25, 87);
-    
-        // Add salutation
-        doc.setFont("helvetica", "normal");
-        doc.text("Dear Sir/Madam,", 20, 100);
-    
-        // Add letter content with proper spacing
-        const content = `I, ${session?.user?.name} from the ${data.department} department, would like to formally request leave from ${format(data.startDate, "MMMM d, yyyy")} to ${format(data.endDate, "MMMM d, yyyy")} (${totalDays} days) for ${data.leaveType === "other" ? data.otherReason : data.leaveType}.
+  const generateLeaveLetter = async (data: FormValues) => {
+    // Create new PDF document
+    const doc = new jsPDF();
+
+    // Set default font
+    doc.setFont("helvetica");
+
+    // Add company letterhead with styling
+    doc.setFillColor(240, 240, 240);
+    doc.rect(0, 0, 210, 30, "F");
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(50, 50, 150);
+    doc.text("DISPLAY PROMOTION", 105, 20, { align: "center" });
+
+    // Add decorative line
+    doc.setDrawColor(50, 50, 150);
+    doc.setLineWidth(0.5);
+    doc.line(20, 32, 190, 32);
+
+    // Add current date (right aligned)
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0, 0, 0);
+    doc.text(format(new Date(), "MMMM d, yyyy"), 190, 40, { align: "right" });
+
+    // Add recipient details with styling
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("To,", 20, 50);
+    doc.setFont("helvetica", "normal");
+    doc.text("The Manager", 20, 57);
+    doc.text("Display Promotion", 20, 64);
+    doc.text("Company Address", 20, 71);
+
+    // Add subject line with background
+    doc.setFillColor(240, 240, 240);
+    doc.rect(20, 80, 170, 10, "F");
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Subject: Leave Application", 25, 87);
+
+    // Add salutation
+    doc.setFont("helvetica", "normal");
+    doc.text("Dear Sir/Madam,", 20, 100);
+
+    // Add letter content with proper spacing
+    const content = `I, ${session?.user?.name} from the ${
+      data.department
+    } department, would like to formally request leave from ${format(
+      data.startDate,
+      "MMMM d, yyyy"
+    )} to ${format(data.endDate, "MMMM d, yyyy")} (${totalDays} days) for ${
+      data.leaveType === "other" ? data.otherReason : data.leaveType
+    }.
 
     Reason for leave:
     ${data.reason}
@@ -166,110 +178,116 @@ export default function LeavePage() {
 
     I appreciate your consideration of my request and will be grateful for your approval.`;
 
-        const contentLines = doc.splitTextToSize(content, 170);
-        doc.text(contentLines, 20, 110);
-    
-        // Add closing
-        doc.text("Thank you for your understanding.", 20, 180);
-        doc.text("Yours sincerely,", 20, 195);
-        doc.setFont("helvetica", "bold");
-        doc.text(session?.user?.name!, 20, 202);
-        doc.setFont("helvetica", "normal");
-        doc.text(data.department, 20, 209);
-    
-        // Add approval section with styling
-        doc.setDrawColor(200, 200, 200);
-        doc.line(20, 220, 190, 220);
-        doc.setFontSize(11);
-        doc.text("For Office Use Only", 105, 228, { align: "center" });
-        doc.text("Approved: _________________", 20, 240);
-        doc.text("Date: _________________", 120, 240);
-        doc.text("Manager's Signature: _________________", 20, 250);
-    
-        // Convert to PDF bytes
-        const pdfBytes = doc.output('arraybuffer');
-    
-        // Create a new PDF document using pdf-lib
-        const mergedPdf = await PDFDocument.create();
-    
-        // Add the leave letter
-        const letterPdf = await PDFDocument.load(pdfBytes);
-        const [letterPage] = await mergedPdf.copyPages(letterPdf, [0]);
-        mergedPdf.addPage(letterPage);
-    
-        // Add supporting documents with better handling
-        if (files && files.length > 0) {
-            doc.addPage();
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(16);
-            doc.text("Supporting Documents", 105, 20, { align: "center" });
-        
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                try {
-                    const fileArrayBuffer = await file.arrayBuffer();
-                    if (file.type === 'application/pdf') {
-                        const docPdf = await PDFDocument.load(fileArrayBuffer);
-                        const docPages = await mergedPdf.copyPages(docPdf, docPdf.getPageIndices());
-                        docPages.forEach(page => mergedPdf.addPage(page));
-                    } else {
-                        // For images, create a new page with proper scaling
-                        const page = mergedPdf.addPage([600, 800]);
-                        let image;
-                        try {
-                            if (file.type === 'image/jpeg') {
-                                image = await mergedPdf.embedJpg(fileArrayBuffer);
-                            } else if (file.type === 'image/png') {
-                                image = await mergedPdf.embedPng(fileArrayBuffer);
-                            }
-                        
-                            if (image) {
-                                // Scale image to fit page while maintaining aspect ratio
-                                const { width, height } = image.scaleToFit(500, 700);
-                                page.drawImage(image, {
-                                    x: page.getWidth() / 2 - width / 2,
-                                    y: page.getHeight() / 2 - height / 2,
-                                    width,
-                                    height,
-                                });
-                            
-                                // Add caption
-                                page.drawText(`Attachment ${i + 1}: ${file.name}`, {
-                                    x: 50,
-                                    y: 30,
-                                    size: 10,
-                                });
-                            }
-                        } catch (error) {
-                            console.error(`Error embedding image ${file.name}:`, error);
-                            page.drawText(`Could not display ${file.name}`, {
-                                x: 50,
-                                y: 400,
-                                size: 12,
-                            });
-                        }
-                    }
-                } catch (error) {
-                    console.error(`Error processing file ${file.name}:`, error);
-                    toast.error(`Error processing file: ${file.name}`);
-                }
+    const contentLines = doc.splitTextToSize(content, 170);
+    doc.text(contentLines, 20, 110);
+
+    // Add closing
+    doc.text("Thank you for your understanding.", 20, 180);
+    doc.text("Yours sincerely,", 20, 195);
+    doc.setFont("helvetica", "bold");
+    doc.text(session?.user?.name!, 20, 202);
+    doc.setFont("helvetica", "normal");
+    doc.text(data.department, 20, 209);
+
+    // Add approval section with styling
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 220, 190, 220);
+    doc.setFontSize(11);
+    doc.text("For Office Use Only", 105, 228, { align: "center" });
+    doc.text("Approved: _________________", 20, 240);
+    doc.text("Date: _________________", 120, 240);
+    doc.text("Manager's Signature: _________________", 20, 250);
+
+    // Convert to PDF bytes
+    const pdfBytes = doc.output("arraybuffer");
+
+    // Create a new PDF document using pdf-lib
+    const mergedPdf = await PDFDocument.create();
+
+    // Add the leave letter
+    const letterPdf = await PDFDocument.load(pdfBytes);
+    const [letterPage] = await mergedPdf.copyPages(letterPdf, [0]);
+    mergedPdf.addPage(letterPage);
+
+    // Add supporting documents with better handling
+    if (files && files.length > 0) {
+      doc.addPage();
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("Supporting Documents", 105, 20, { align: "center" });
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+          const fileArrayBuffer = await file.arrayBuffer();
+          if (file.type === "application/pdf") {
+            const docPdf = await PDFDocument.load(fileArrayBuffer);
+            const docPages = await mergedPdf.copyPages(
+              docPdf,
+              docPdf.getPageIndices()
+            );
+            docPages.forEach((page) => mergedPdf.addPage(page));
+          } else {
+            // For images, create a new page with proper scaling
+            const page = mergedPdf.addPage([600, 800]);
+            let image;
+            try {
+              if (file.type === "image/jpeg") {
+                image = await mergedPdf.embedJpg(fileArrayBuffer);
+              } else if (file.type === "image/png") {
+                image = await mergedPdf.embedPng(fileArrayBuffer);
+              }
+
+              if (image) {
+                // Scale image to fit page while maintaining aspect ratio
+                const { width, height } = image.scaleToFit(500, 700);
+                page.drawImage(image, {
+                  x: page.getWidth() / 2 - width / 2,
+                  y: page.getHeight() / 2 - height / 2,
+                  width,
+                  height,
+                });
+
+                // Add caption
+                page.drawText(`Attachment ${i + 1}: ${file.name}`, {
+                  x: 50,
+                  y: 30,
+                  size: 10,
+                });
+              }
+            } catch (error) {
+              console.error(`Error embedding image ${file.name}:`, error);
+              page.drawText(`Could not display ${file.name}`, {
+                x: 50,
+                y: 400,
+                size: 12,
+              });
             }
+          }
+        } catch (error) {
+          console.error(`Error processing file ${file.name}:`, error);
+          toast.error(`Error processing file: ${file.name}`);
         }
-    
-        // Save and download the merged PDF with better filename
-        const mergedBytes = await mergedPdf.save();
-        const blob = new Blob([mergedBytes], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Leave_Application_${session?.user?.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    
-        toast.success("Leave application generated successfully!");
-    };
+      }
+    }
+
+    // Save and download the merged PDF with better filename
+    const mergedBytes = await mergedPdf.save();
+    const blob = new Blob([mergedBytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Leave_Application_${session?.user?.name.replace(
+      /\s+/g,
+      "_"
+    )}_${format(new Date(), "yyyyMMdd")}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success("Leave application generated successfully!");
+  };
   const onSubmit = async (data: FormValues) => {
     try {
       setIsSubmitting(true);
@@ -292,11 +310,7 @@ export default function LeavePage() {
         transition={{ duration: 0.3 }}
         className="mb-6"
       >
-        <Button
-          variant="ghost"
-          className="mb-4"
-          onClick={() => router.back()}
-        >
+        <Button variant="ghost" className="mb-4" onClick={() => router.back()}>
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
@@ -315,7 +329,10 @@ export default function LeavePage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Department</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select your department" />
@@ -340,7 +357,10 @@ export default function LeavePage() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Leave Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select leave type" />

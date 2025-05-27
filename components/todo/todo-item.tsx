@@ -14,6 +14,7 @@ import {
   Clock,
   User,
   AlertCircle,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -186,6 +187,14 @@ export default function TodoItem({
               <Button
                 variant="ghost"
                 size="icon"
+                onClick={() => router.push(`/todos/${todo._id}/details`)}
+              >
+                <Eye className="h-4 w-4" />
+                <span className="sr-only">View Details</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => router.push(`/todos/${todo._id}`)}
               >
                 <Edit className="h-4 w-4" />
@@ -312,4 +321,5 @@ export default function TodoItem({
         </DialogContent>
       </Dialog>
     </motion.div>
-  );}
+  );
+}

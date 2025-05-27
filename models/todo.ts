@@ -1,5 +1,30 @@
 import mongoose from "mongoose";
 
+const EditHistorySchema = new mongoose.Schema({
+  editor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  editedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  previousVersion: {
+    title: String,
+    description: String,
+    status: String,
+    incompleteReason: String,
+    dueDate: Date,
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    priority: String,
+    images: [String],
+  },
+});
+
 const TodoSchema = new mongoose.Schema(
   {
     title: {
@@ -50,6 +75,11 @@ const TodoSchema = new mongoose.Schema(
       enum: ["urgent", "none"],
       default: "none",
     },
+    version: {
+      type: Number,
+      default: 1,
+    },
+    editHistory: [EditHistorySchema],
   },
   {
     timestamps: true,
