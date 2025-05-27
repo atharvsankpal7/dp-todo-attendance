@@ -54,6 +54,62 @@ export async function GET(
   }
 }
 
+// for editing the status ONLY
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const { status, incompleteReason } = await req.json();
+    
+    await connectToDB();
+
+    const todo = await Todo.findById(params.id);
+    
+    if (!todo) {
+      return NextResponse.json(
+        { message: "Todo not found" },
+        { status: 404 }
+      );
+    }
+
+    // Update status and reason
+    if (status) {
+      todo.status = status;
+      if (status === "incomplete" && incompleteReason) {
+        todo.incompleteReason = incompleteReason;
+      } else if (status === "complete") {
+        todo.incompleteReason = undefined;
+      }
+    }
+
+    await todo.save();
+
+    const updatedTodo = await Todo.findById(params.id)
+      .populate("assignedTo", "name email")
+      .populate("createdBy", "name email");
+
+    return NextResponse.json(updatedTodo);
+  } catch (error) {
+    console.error("Error updating todo status:", error);
+    return NextResponse.json(
+      { message: "Error updating todo status" },
+      { status: 500 }
+    );
+  }
+}
+
+
+// for editing the task's other properties
 export async function PUT(
   req: Request,
   { params }: { params: { id: string } }

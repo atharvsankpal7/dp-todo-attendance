@@ -42,6 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSession } from "next-auth/react";
 
 interface TodoItemProps {
   todo: any;
@@ -57,6 +58,7 @@ export default function TodoItem({
   onDelete,
 }: TodoItemProps) {
   const router = useRouter();
+  const { data: session } = useSession();
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [incompleteReason, setIncompleteReason] = useState(
@@ -64,6 +66,9 @@ export default function TodoItem({
   );
   const [selectedStatus, setSelectedStatus] = useState(todo.status);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isCreator = todo.createdBy._id === session?.user?.id;
+  const canEdit = isAdmin || isCreator;
 
   const handleStatusChange = async () => {
     setIsSubmitting(true);
@@ -75,7 +80,7 @@ export default function TodoItem({
       }
 
       const response = await fetch(`/api/todos/${todo._id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
@@ -195,8 +200,7 @@ export default function TodoItem({
                 </Badge>
               </div>
             </div>
-            {/* TODO: owner should be valid id */}
-            {(isAdmin || todo.createdBy === "owner") && (
+            {canEdit && (
               <div className="flex space-x-1">
                 <Button
                   variant="ghost"
