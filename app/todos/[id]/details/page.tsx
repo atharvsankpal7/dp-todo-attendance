@@ -14,6 +14,7 @@ import {
   Clock,
   User,
   History,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -195,7 +196,7 @@ export default function TodoDetailsPage() {
               </div>
 
               {todo.status === "incomplete" && todo.incompleteReason && (
-                <div className="mt-4 rounded-md bg-amber-50 p-4 text-amber-900">
+                <div className="mt-4 rounded-md bg-amber-50 p-4 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
                   <h3 className="font-medium mb-2">Reason for Incomplete Status</h3>
                   <p>{todo.incompleteReason}</p>
                 </div>
@@ -208,9 +209,11 @@ export default function TodoDetailsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Version</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Editor</TableHead>
                       <TableHead>Changes</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -225,8 +228,11 @@ export default function TodoDetailsPage() {
                       if (new Date(prev.dueDate).getTime() !== new Date(todo.dueDate).getTime()) changes.push("Due Date");
                       if (prev.assignedTo.toString() !== todo.assignedTo._id.toString()) changes.push("Assigned User");
 
+                      const version = index + 2;
+
                       return (
                         <TableRow key={index}>
+                          <TableCell>v{version}</TableCell>
                           <TableCell>
                             {format(new Date(edit.editedAt), "PPP p")}
                           </TableCell>
@@ -239,6 +245,16 @@ export default function TodoDetailsPage() {
                                 </Badge>
                               ))}
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => router.push(`/todos/${todo._id}/version/${version}`)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View Details
+                            </Button>
                           </TableCell>
                         </TableRow>
                       );
