@@ -102,8 +102,7 @@ export default function TodoDetailsPage() {
   }
 
   const isCreator = todo.createdBy._id === session?.user?.id;
-  const isAdmin = session?.user?.role === "admin";
-  const canEdit = isCreator || isAdmin;
+  const canEdit = isCreator; // Only creator can edit
 
   return (
     <div className="container py-10">

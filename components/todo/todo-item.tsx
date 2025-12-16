@@ -68,7 +68,7 @@ export default function TodoItem({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isCreator = todo.createdBy._id === session?.user?.id;
-  const canEdit = isAdmin || isCreator;
+  const canEdit = isCreator; // Only creator can edit
 
   const handleStatusChange = async () => {
     setIsSubmitting(true);
@@ -254,11 +254,13 @@ export default function TodoItem({
             open={isStatusDialogOpen}
             onOpenChange={setIsStatusDialogOpen}
           >
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                Update Status
-              </Button>
-            </DialogTrigger>
+            {(isCreator || todo.assignedTo._id === session?.user?.id) && (
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Update Status
+                </Button>
+              </DialogTrigger>
+            )}
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Update Todo Status</DialogTitle>

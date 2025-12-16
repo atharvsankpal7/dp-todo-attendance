@@ -82,6 +82,17 @@ export async function PATCH(
       );
     }
 
+    // Check permissions - only creator can edit status, assigned user can update their own task status
+    const isCreator = todo.createdBy.toString() === session.user.id;
+    const isAssignedUser = todo.assignedTo.toString() === session.user.id;
+
+    if (!isCreator && !isAssignedUser) {
+      return NextResponse.json(
+        { message: "Only the task creator or assigned user can update status" },
+        { status: 403 }
+      );
+    }
+
     // Update status and reason
     if (status) {
       todo.status = status;
@@ -137,13 +148,12 @@ export async function PUT(
       );
     }
 
-    // Check permissions - only creator and admin can edit
+    // Check permissions - only creator can edit, regardless of admin role
     const isCreator = todo.createdBy.toString() === session.user.id;
-    const isAdmin = session.user.role === "admin";
 
-    if (!isCreator && !isAdmin) {
+    if (!isCreator) {
       return NextResponse.json(
-        { message: "Not authorized to update this todo" },
+        { message: "Only the task creator can edit this todo" },
         { status: 403 }
       );
     }
@@ -174,10 +184,11 @@ export async function PUT(
     if (description) todo.description = description;
     if (images) todo.images = images;
     
-    // Only admin can reassign todos
-    if (isAdmin && assignedTo) {
-      todo.assignedTo = assignedTo;
-    }
+    // Only admin can reassign todos - but since only creator can edit, remove reassignment
+    // Commenting out reassignment as only creator should be able to edit
+    // if (assignedTo) {
+    //   todo.assignedTo = assignedTo;
+    // }
     
     if (dueDate) todo.dueDate = dueDate;
     
@@ -239,13 +250,12 @@ export async function DELETE(
       );
     }
 
-    // Check permissions - only creator or admin can delete
+    // Check permissions - only creator can delete
     const isCreator = todo.createdBy.toString() === session.user.id;
-    const isAdmin = session.user.role === "admin";
 
-    if (!isCreator && !isAdmin) {
+    if (!isCreator) {
       return NextResponse.json(
-        { message: "Not authorized to delete this todo" },
+        { message: "Only the task creator can delete this todo" },
         { status: 403 }
       );
     }

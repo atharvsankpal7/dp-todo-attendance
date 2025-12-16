@@ -30,6 +30,13 @@ export default function EditTodoPage() {
         }
 
         const data = await response.json();
+        
+        // Check if current user is the creator
+        if (data.createdBy._id !== session?.user?.id) {
+          router.push("/todos");
+          return;
+        }
+        
         setTodo(data);
       } catch (error) {
         console.error("Error fetching todo:", error);
@@ -56,7 +63,7 @@ export default function EditTodoPage() {
     } else if (status === "unauthenticated") {
       router.push("/auth/signin");
     }
-  }, [status, isAdmin, router, todoId]);
+  }, [status, isAdmin, router, todoId, session?.user?.id]);
 
   if (status === "loading" || loading) {
     return (
