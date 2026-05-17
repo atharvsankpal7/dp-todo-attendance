@@ -3,6 +3,7 @@ import { connectToDB } from "@/lib/mongoose";
 import User from "@/models/user";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
+import { hash } from "@/lib/utils";
 
 export async function GET(
   req: Request,
@@ -66,10 +67,10 @@ export async function PUT(
       );
     }
 
-    // Update fields
+    // Update fields — password is only set if explicitly provided
     if (name) user.name = name;
     if (email) user.email = email;
-    if (password) user.password = password;
+    if (password) user.password = await hash(password);
     if (role) user.role = role;
 
     await user.save();

@@ -3,6 +3,7 @@ import { connectToDB } from "@/lib/mongoose";
 import User from "@/models/user";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
+import { hash } from "@/lib/utils";
 
 export async function GET(req: Request) {
   try {
@@ -61,11 +62,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create new user
+    // Create new user with hashed password
+    const hashedPassword = await hash(password);
     const newUser = await User.create({
       name,
       email,
-      password,
+      password: hashedPassword,
       role: role || "user",
     });
 
